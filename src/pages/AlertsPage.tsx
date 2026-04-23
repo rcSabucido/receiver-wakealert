@@ -47,6 +47,7 @@ export function AlertsPage() {
   const [appliedFilter, setAppliedFilter] = useState<StatusFilter>("all");
   const [draftFilter, setDraftFilter] = useState<StatusFilter>("all");
   const [isFilterModalOpen, setIsFilterModalOpen] = useState(false);
+  const [pendingDeleteAlertId, setPendingDeleteAlertId] = useState<number | null>(null);
   const [alertStatuses, setAlertStatuses] = useState<Record<number, boolean>>(
     Object.fromEntries(alerts.map((alert) => [alert.id, alert.isCompleted]))
   );
@@ -65,6 +66,23 @@ export function AlertsPage() {
       delete next[alertId];
       return next;
     });
+  };
+
+  const openDeleteConfirmation = (alertId: number) => {
+    setPendingDeleteAlertId(alertId);
+  };
+
+  const cancelDelete = () => {
+    setPendingDeleteAlertId(null);
+  };
+
+  const confirmDelete = () => {
+    if (pendingDeleteAlertId === null) {
+      return;
+    }
+
+    deleteAlert(pendingDeleteAlertId);
+    setPendingDeleteAlertId(null);
   };
 
   const openFilterModal = () => {
@@ -109,6 +127,9 @@ export function AlertsPage() {
           return aCompleted ? 1 : -1;
         })
       : filteredAlerts;
+
+  const pendingDeleteAlert =
+    pendingDeleteAlertId === null ? null : alertsData.find((alert) => alert.id === pendingDeleteAlertId);
 
   return (
     <div className="flex-1 min-h-full bg-[#E5E5E5] p-8">
@@ -183,7 +204,7 @@ export function AlertsPage() {
                 {isCompleted && (
                   <button
                     type="button"
-                    onClick={() => deleteAlert(alert.id)}
+                    onClick={() => openDeleteConfirmation(alert.id)}
                     aria-label={`Delete alert ${alert.id}`}
                     className="flex h-10 w-10 cursor-pointer items-center justify-center rounded-md bg-red-100 text-red-700 transition-colors hover:bg-red-200"
                   >
@@ -278,6 +299,45 @@ export function AlertsPage() {
                 className="cursor-pointer rounded-md bg-[#D5FF9E] px-4 py-2 text-sm font-semibold text-black transition-colors hover:bg-[#BEEA7A]"
               >
                 Apply
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {pendingDeleteAlertId !== null && (
+        <div className="fixed inset-0 z-60 flex items-center justify-center bg-black/30 p-4">
+          <div className="w-full max-w-sm rounded-xl bg-white p-5 text-center shadow-xl">
+            <h3 className="text-lg font-semibold text-gray-900">Delete Alert</h3>
+            <p className="mt-2 text-sm text-gray-600">
+              Are you sure you want to delete alert
+              {pendingDeleteAlert && (
+                <>
+                  {" "}
+                  <span className="font-semibold">#{pendingDeleteAlert.id}</span>
+                  {" for "}
+                  <span className="font-semibold">
+                    {pendingDeleteAlert.firstName} {pendingDeleteAlert.lastName}
+                  </span>
+                </>
+              )}
+              ?
+            </p>
+
+            <div className="mt-6 flex justify-center gap-3">
+              <button
+                type="button"
+                onClick={cancelDelete}
+                className="min-w-28 cursor-pointer rounded-md bg-gray-100 px-4 py-2 text-sm font-semibold text-gray-800 transition-colors hover:bg-gray-200"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={confirmDelete}
+                className="min-w-28 cursor-pointer rounded-md bg-red-600 px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-red-700"
+              >
+                Delete
               </button>
             </div>
           </div>
