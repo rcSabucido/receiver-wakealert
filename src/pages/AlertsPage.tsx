@@ -37,6 +37,46 @@ const alerts: AlertItem[] = [
     alertTime: "2026-04-22 22:47",
     isCompleted: false,
   },
+    {
+    id: 3,
+    firstName: "Pedro",
+    lastName: "Reyes",
+    location: "Blk 5, Lot 7,\nBarangay Mabini, Something City,\nQuezon",
+    alertTime: "2026-04-22 22:47",
+    isCompleted: false,
+  },
+    {
+    id: 3,
+    firstName: "Pedro",
+    lastName: "Reyes",
+    location: "Blk 5, Lot 7,\nBarangay Mabini, Something City,\nQuezon",
+    alertTime: "2026-04-22 22:47",
+    isCompleted: false,
+  },
+    {
+    id: 3,
+    firstName: "Pedro",
+    lastName: "Reyes",
+    location: "Blk 5, Lot 7,\nBarangay Mabini, Something City,\nQuezon",
+    alertTime: "2026-04-22 22:47",
+    isCompleted: false,
+  },
+    {
+    id: 3,
+    firstName: "Pedro",
+    lastName: "Reyes",
+    location: "Blk 5, Lot 7,\nBarangay Mabini, Something City,\nQuezon",
+    alertTime: "2026-04-22 22:47",
+    isCompleted: false,
+  },
+    {
+    id: 3,
+    firstName: "Pedro",
+    lastName: "Reyes",
+    location: "Blk 5, Lot 7,\nBarangay Mabini, Something City,\nQuezon",
+    alertTime: "2026-04-22 22:47",
+    isCompleted: false,
+  },
 ];
 
 export function AlertsPage() {
