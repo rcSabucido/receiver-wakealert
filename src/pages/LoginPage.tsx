@@ -19,7 +19,7 @@ export function LoginPage() {
 
       <div className="flex w-full md:w-1/2 items-start justify-start bg-blue-500 pt-[18vh] px-6 md:pl-19">
         <div className="w-full max-w-[738px]">
-          <h1 className="mb-10 text-5xl font-semibold text-white tracking-tight">Login</h1>
+          <h1 className="mb-10 text-5xl font-semibold text-white tracking-tight">WakeAlert Receiver</h1>
 
           <form onSubmit={handleLogin} className="space-y-10">
             <div className="flex flex-col mb-11">
