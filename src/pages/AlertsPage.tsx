@@ -203,7 +203,8 @@ export function AlertsPage() {
                     setSelectedAlert(alert);
                     setIsInfoModalOpen(true);
                   }}
-                  className={`flex h-10 items-center justify-center cursor-pointer rounded-lg bg-[#D5FF9E] px-4 text-sm font-semibold text-black transition-colors duration-200 ease-out hover:bg-[#BEEA7A] ${
+                  className={`flex h-10 items-center justify-center cursor-pointer rounded-lg 
+                    bg-[#D5FF9E] px-4 text-sm font-semibold hover:bg-[#BEEA7A] ${
                     isCompleted ? "flex-1" : "w-full"
                   }`}
                 >
