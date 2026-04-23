@@ -1,4 +1,5 @@
-import { Link, useNavigate } from "react-router-dom";
+import { ArrowRightStartOnRectangleIcon, BellIcon, MapPinIcon } from "@heroicons/react/24/outline";
+import { NavLink, useNavigate } from "react-router-dom";
 
 export function Sidebar() {
   const navigate = useNavigate();
@@ -8,26 +9,37 @@ export function Sidebar() {
   };
 
   return (
-    <div className="w-64 bg-gray-800 text-white h-screen flex flex-col p-6">
-      <h1 className="text-2xl font-bold mb-8">WakeAlert</h1>
+    <div className="w-64 bg-[#3F8EFC] text-white h-screen flex flex-col items-center p-6">
+        <div className="w-40 h-40 bg-white rounded-full mb-8"></div>
       <nav className="flex-1">
-        <Link
+        <NavLink
           to="/alerts"
-          className="block py-3 px-4 rounded hover:bg-gray-700 transition mb-2"
+          className={({ isActive }) =>
+            `py-3 px-15 rounded flex gap-2 items-center transition mb-2 ${
+              isActive ? "bg-[#D5FF9E] text-black" : ""
+            }`
+          }
         >
+            <BellIcon className="w-6 h-6" />
           Alerts
-        </Link>
-        <Link
+        </NavLink>
+        <NavLink
           to="/locations"
-          className="block py-3 px-4 rounded hover:bg-gray-700 transition mb-2"
+          className={({ isActive }) =>
+            `py-3 px-15 rounded flex gap-2 items-center transition mb-2 ${
+              isActive ? "bg-[#D5FF9E] text-black" : ""
+            }`
+          }
         >
+            <MapPinIcon className="w-6 h-6" />
           Locations
-        </Link>
+        </NavLink>
       </nav>
       <button
         onClick={handleSignOut}
-        className="w-full py-3 px-4 bg-red-600 rounded hover:bg-red-700 transition font-semibold"
+        className="py-3 px-15 rounded flex gap-2 items-center transition hover:bg-red-700 font-semibold whitespace-nowrap"
       >
+        <ArrowRightStartOnRectangleIcon className="w-6 h-6 shrink-0" />
         Sign Out
       </button>
     </div>
