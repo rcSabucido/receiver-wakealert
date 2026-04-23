@@ -25,9 +25,9 @@ export function LoginPage() {
             Login
           </h1>
           
-          <form onSubmit={handleLogin} className="space-y-9">
+          <form onSubmit={handleLogin} className="space-y-10">
 
-            <div className="flex flex-col">
+            <div className="flex flex-col mb-9">
               <label className="block text-xl md:text-xl font-semibold text-white mb-3">
                 Username:
               </label>
@@ -53,7 +53,7 @@ export function LoginPage() {
             <button
               type="submit"
               className="w-full md:h-12 rounded-xl bg-lime-200 font-bold
-            text-gray-800 shadow-lg text-xl mt-5 hover:bg-lime-300 transition-colors"
+            text-gray-800 shadow-lg text-xl mt-2 hover:bg-lime-300 transition-colors"
             >
               Login
             </button>
