@@ -19,7 +19,7 @@ export function LoginPage() {
 
       <div className="flex w-full md:w-1/2 items-start justify-start bg-blue-500 pt-[18vh] px-6 md:pl-19">
         <div className="w-full max-w-[738px]">
-          <h1 className="mb-10 text-5xl font-semibold text-white tracking-tight">WakeAlert Receiver</h1>
+          <h1 className="mb-10 text-4xl font-semibold text-white tracking-tight">WakeAlert Receiver</h1>
 
           <form onSubmit={handleLogin} className="space-y-10">
             <div className="flex flex-col mb-11">
@@ -27,7 +27,8 @@ export function LoginPage() {
               <input
                 required
                 type="text"
-                className="w-full h-12 rounded-xl p-4 shadow-xl outline-none text-gray-800 bg-white transition-all"
+                className="w-full h-12 rounded-xl p-4 shadow-xl outline-none text-gray-800 
+                bg-white transition-all"
               />
             </div>
 
@@ -39,14 +40,15 @@ export function LoginPage() {
                   value={passwordValue}
                   onChange={(e) => setPasswordValue(e.target.value)}
                   type={showPassword ? "text" : "password"}
-                  className="w-full h-12 rounded-xl p-4 pr-12 shadow-xl outline-none bg-white transition-all text-gray-800"
+                  className="w-full h-12 rounded-xl p-4 pr-12 shadow-xl outline-none 
+                  bg-white transition-all text-gray-800"
                 />
                 
                 {passwordValue.length > 0 && (
                   <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-blue-500 transition-all animate-in zoom-in duration-200"
+                    className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 "
                   >
                     {showPassword ? (
                       <EyeSlashIcon className="h-6 w-6" />
@@ -60,7 +62,8 @@ export function LoginPage() {
 
             <button
               type="submit"
-              className="w-full h-12 rounded-xl bg-lime-200 font-bold text-gray-800 shadow-lg text-xl mt-2 hover:bg-lime-300 transition-colors uppercase"
+              className="w-full h-12 rounded-xl bg-lime-200 font-bold 
+              text-gray-800 shadow-lg text-xl mt-2 hover:bg-lime-300 transition-colors"
             >
               Login
             </button>
