@@ -77,7 +77,6 @@ const info: InformationItem[] = [
 const InformationModal = ({ isOpen, onClose, userData }: InformationModalProps) => {
   if (!isOpen) return null;
 
-  // We find the specific information item that matches the ID of the clicked alert
   const patientDetails = info.find((item) => item.id === userData?.id);
 
   return (
@@ -107,7 +106,7 @@ const InformationModal = ({ isOpen, onClose, userData }: InformationModalProps) 
                 <InfoRow label="Primary Contact:" value={patientDetails?.primaryContact} />
                 <InfoRow label="Address:" value={patientDetails?.address} />
                 <InfoRow label="Pregnancy Status:" value={patientDetails?.pregnancyStatus} />
-                {/* Boolean check for Organ Donor */}
+                
                 <InfoRow label="Organ Donor:" value={patientDetails?.organDonor ? "Yes" : "No"} />
               </tbody>
             </table>
