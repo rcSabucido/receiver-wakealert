@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { ViewModeToggle } from "../components/ViewModeToggle";
-import { FunnelIcon } from "@heroicons/react/24/outline";
+import { FunnelIcon, TrashIcon } from "@heroicons/react/24/outline";
 
 type ViewMode = "card" | "list";
 type StatusFilter = "all" | "ongoing" | "completed";
@@ -42,6 +42,7 @@ const alerts: AlertItem[] = [
 ];
 
 export function AlertsPage() {
+  const [alertsData, setAlertsData] = useState<AlertItem[]>(alerts);
   const [viewMode, setViewMode] = useState<ViewMode>("card");
   const [appliedFilter, setAppliedFilter] = useState<StatusFilter>("all");
   const [draftFilter, setDraftFilter] = useState<StatusFilter>("all");
@@ -55,6 +56,15 @@ export function AlertsPage() {
       ...prev,
       [alertId]: !prev[alertId],
     }));
+  };
+
+  const deleteAlert = (alertId: number) => {
+    setAlertsData((prev) => prev.filter((alert) => alert.id !== alertId));
+    setAlertStatuses((prev) => {
+      const next = { ...prev };
+      delete next[alertId];
+      return next;
+    });
   };
 
   const openFilterModal = () => {
@@ -75,7 +85,7 @@ export function AlertsPage() {
     setIsFilterModalOpen(false);
   };
 
-  const filteredAlerts = alerts.filter((alert) => {
+  const filteredAlerts = alertsData.filter((alert) => {
     const isCompleted = alertStatuses[alert.id] ?? alert.isCompleted;
 
     if (appliedFilter === "completed") {
@@ -116,7 +126,10 @@ export function AlertsPage() {
 
       {viewMode === "card" ? (
         <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
-          {cardAlerts.map((alert, index) => (
+          {cardAlerts.map((alert, index) => {
+            const isCompleted = alertStatuses[alert.id] ?? alert.isCompleted;
+
+            return (
             <article key={`${alert.id}-${index}`} className="flex flex-col gap-4 rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
               <div className="flex items-center justify-between border-b border-gray-200 pb-3">
                 <p className="text-sm font-semibold text-gray-900">#{alert.id}</p>
@@ -124,12 +137,12 @@ export function AlertsPage() {
                   type="button"
                   onClick={() => toggleAlertStatus(alert.id)}
                   className={`cursor-pointer rounded-md px-3 py-1 text-xs font-semibold transition-colors duration-200 ${
-                    alertStatuses[alert.id]
+                    isCompleted
                       ? "bg-green-100 text-green-700 hover:bg-green-200"
                       : "bg-red-100 text-red-700 hover:bg-red-200"
                   }`}
                 >
-                  {alertStatuses[alert.id] ? "Completed" : "Ongoing"}
+                  {isCompleted ? "Completed" : "Ongoing"}
                 </button>
               </div>
 
@@ -158,14 +171,29 @@ export function AlertsPage() {
                 </div>
               </div>
 
-              <button
-                type="button"
-                className="mt-1 cursor-pointer rounded-lg bg-[#D5FF9E] px-4 py-2 text-sm font-semibold text-black transition-colors duration-200 ease-out hover:bg-[#BEEA7A]"
-              >
-                View Information
-              </button>
+              <div className="mt-1 flex items-center justify-between gap-1">
+                <button
+                  type="button"
+                  className={`flex h-10 items-center justify-center cursor-pointer rounded-lg bg-[#D5FF9E] px-4 text-sm font-semibold text-black transition-colors duration-200 ease-out hover:bg-[#BEEA7A] ${
+                    isCompleted ? "flex-1" : "w-full"
+                  }`}
+                >
+                  View Information
+                </button>
+                {isCompleted && (
+                  <button
+                    type="button"
+                    onClick={() => deleteAlert(alert.id)}
+                    aria-label={`Delete alert ${alert.id}`}
+                    className="flex h-10 w-10 cursor-pointer items-center justify-center rounded-md bg-red-100 text-red-700 transition-colors hover:bg-red-200"
+                  >
+                    <TrashIcon className="h-5 w-5" />
+                  </button>
+                )}
+              </div>
             </article>
-          ))}
+            );
+          })}
         </div>
       ) : (
         <div className="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
