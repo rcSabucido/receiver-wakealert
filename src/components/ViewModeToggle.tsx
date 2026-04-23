@@ -7,14 +7,14 @@ type ViewModeToggleProps = {
 
 export function ViewModeToggle({ value, onChange }: ViewModeToggleProps) {
   return (
-    <div className="inline-flex items-center rounded-full bg-gray-100 p-1" role="radiogroup" aria-label="View mode">
+    <div className="inline-flex items-center rounded-lg bg-[#3F8EFC] p-1" role="radiogroup" aria-label="View mode">
       <button
         type="button"
         role="radio"
         aria-checked={value === "card"}
         onClick={() => onChange("card")}
-        className={`px-4 py-2 text-sm font-semibold rounded-full transition ${
-          value === "card" ? "bg-white text-black shadow-sm" : "text-gray-600"
+        className={`min-w-35 rounded-md px-4 py-2 text-sm font-semibold transition-colors ${
+          value === "card" ? "bg-[#D5FF9E] text-black" : "text-white"
         }`}
       >
         Card View
@@ -24,8 +24,8 @@ export function ViewModeToggle({ value, onChange }: ViewModeToggleProps) {
         role="radio"
         aria-checked={value === "list"}
         onClick={() => onChange("list")}
-        className={`px-4 py-2 text-sm font-semibold rounded-full transition ${
-          value === "list" ? "bg-white text-black shadow-sm" : "text-gray-600"
+        className={`min-w-35 rounded-md px-4 py-2 text-sm font-semibold transition-colors ${
+          value === "list" ? "bg-[#D5FF9E] text-black" : "text-white"
         }`}
       >
         List View
