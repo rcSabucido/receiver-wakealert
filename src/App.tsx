@@ -12,13 +12,15 @@ function App() {
         <Route
           path="/*"
           element={
-            <div className="flex">
+            <div className="flex h-screen overflow-hidden">
               <Sidebar />
-              <Routes>
-                <Route path="/alerts" element={<AlertsPage />} />
-                <Route path="/locations" element={<LocationsPage />} />
-                <Route path="/" element={<Navigate to="/alerts" replace />} />
-              </Routes>
+              <main className="flex-1 overflow-y-auto">
+                <Routes>
+                  <Route path="/alerts" element={<AlertsPage />} />
+                  <Route path="/locations" element={<LocationsPage />} />
+                  <Route path="/" element={<Navigate to="/alerts" replace />} />
+                </Routes>
+              </main>
             </div>
           }
         />
