@@ -72,4 +72,6 @@ export function LoginPage() {
       </div>
     </div>
   );
-}
+} 
+
+export default LoginPage;
