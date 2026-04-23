@@ -12,7 +12,7 @@ export function LoginPage() {
 
       <div className="hidden md:flex w-1/2 items-center justify-center bg-white p-10">
         <div className="flex flex-col items-center">
-          <div className="h-[30vw] w-[30vw] max-w-[500px] max-h-[500px] rounded-full 
+          <div className="h-[40vw] w-[40vw] max-w-[500px] max-h-[500px] rounded-full 
                         bg-blue-500 shadow-2xl flex items-center justify-center transition-all duration-500">
           </div>
         </div>
