@@ -93,7 +93,7 @@ export function AlertsPage() {
   };
 
   return (
-    <div className="flex-1 p-8">
+    <div className="flex-1 min-h-full bg-[#E5E5E5] p-8">
       <div className="mb-6">
         <ViewModeToggle value={viewMode} onChange={setViewMode} />
       </div>
