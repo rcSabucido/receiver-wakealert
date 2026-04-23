@@ -87,6 +87,19 @@ export function AlertsPage() {
     return true;
   });
 
+  const cardAlerts =
+    appliedFilter === "all"
+      ? [...filteredAlerts].sort((a, b) => {
+          const aCompleted = alertStatuses[a.id] ?? a.isCompleted;
+          const bCompleted = alertStatuses[b.id] ?? b.isCompleted;
+
+          if (aCompleted === bCompleted) {
+            return 0;
+          }
+          return aCompleted ? 1 : -1;
+        })
+      : filteredAlerts;
+
   return (
     <div className="flex-1 min-h-full bg-[#E5E5E5] p-8">
       <div className="mb-6 flex items-center justify-between gap-4">
@@ -95,7 +108,7 @@ export function AlertsPage() {
           type="button"
           onClick={openFilterModal}
           aria-label="Open filter"
-          className="flex h-11 w-11 items-center justify-center rounded-lg bg-[#D5FF9E] text-black transition-colors hover:bg-[#BEEA7A]"
+          className="flex h-11 w-11 cursor-pointer items-center justify-center rounded-lg bg-[#D5FF9E] text-black transition-colors hover:bg-[#BEEA7A]"
         >
           <FunnelIcon className="h-6 w-6" />
         </button>
@@ -103,15 +116,17 @@ export function AlertsPage() {
 
       {viewMode === "card" ? (
         <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
-          {filteredAlerts.map((alert, index) => (
+          {cardAlerts.map((alert, index) => (
             <article key={`${alert.id}-${index}`} className="flex flex-col gap-4 rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
               <div className="flex items-center justify-between border-b border-gray-200 pb-3">
                 <p className="text-sm font-semibold text-gray-900">#{alert.id}</p>
                 <button
                   type="button"
                   onClick={() => toggleAlertStatus(alert.id)}
-                  className={`rounded-full px-3 py-1 text-xs font-semibold transition ${
-                    alertStatuses[alert.id] ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700"
+                  className={`cursor-pointer rounded-md px-3 py-1 text-xs font-semibold transition-colors duration-200 ${
+                    alertStatuses[alert.id]
+                      ? "bg-green-100 text-green-700 hover:bg-green-200"
+                      : "bg-red-100 text-red-700 hover:bg-red-200"
                   }`}
                 >
                   {alertStatuses[alert.id] ? "Completed" : "Ongoing"}
@@ -126,7 +141,7 @@ export function AlertsPage() {
                 <button
                   type="button"
                   aria-label="Location placeholder"
-                  className="h-12 w-12 shrink-0 rounded-md border border-gray-300 bg-gray-100"
+                  className="h-12 w-12 shrink-0 cursor-pointer rounded-md border border-gray-300 bg-gray-100"
                 />
               </div>
 
@@ -145,7 +160,7 @@ export function AlertsPage() {
 
               <button
                 type="button"
-                className="mt-1 rounded-lg bg-[#D5FF9E] px-4 py-2 text-sm font-semibold text-black transition-colors duration-200 ease-out hover:bg-[#BEEA7A]"
+                className="mt-1 cursor-pointer rounded-lg bg-[#D5FF9E] px-4 py-2 text-sm font-semibold text-black transition-colors duration-200 ease-out hover:bg-[#BEEA7A]"
               >
                 View Information
               </button>
@@ -180,7 +195,7 @@ export function AlertsPage() {
               <button
                 type="button"
                 onClick={clearFilter}
-                className="rounded-md px-2 py-1 text-sm font-semibold text-[#3F8EFC] transition-colors hover:bg-blue-50"
+                className="cursor-pointer rounded-md px-2 py-1 text-sm font-semibold text-[#3F8EFC] transition-colors hover:bg-blue-50"
               >
                 Clear
               </button>
@@ -225,14 +240,14 @@ export function AlertsPage() {
               <button
                 type="button"
                 onClick={cancelFilter}
-                className="rounded-md bg-red-600 px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-red-700"
+                className="cursor-pointer rounded-md bg-red-600 px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-red-700"
               >
                 Cancel
               </button>
               <button
                 type="button"
                 onClick={applyFilter}
-                className="rounded-md bg-[#D5FF9E] px-4 py-2 text-sm font-semibold text-black transition-colors hover:bg-[#BEEA7A]"
+                className="cursor-pointer rounded-md bg-[#D5FF9E] px-4 py-2 text-sm font-semibold text-black transition-colors hover:bg-[#BEEA7A]"
               >
                 Apply
               </button>
