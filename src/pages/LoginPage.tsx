@@ -22,7 +22,7 @@ export function LoginPage() {
           <h1 className="mb-10 text-4xl font-semibold text-white tracking-tight">WakeAlert Receiver</h1>
 
           <form onSubmit={handleLogin} className="space-y-10">
-            <div className="flex flex-col mb-11">
+            <div className="flex flex-col mb-8">
               <label className="block text-xl font-semibold text-white mb-3">Username:</label>
               <input
                 required
