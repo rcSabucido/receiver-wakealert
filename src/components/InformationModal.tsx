@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import { XMarkIcon } from "@heroicons/react/24/outline";
 
 interface InformationModalProps {
@@ -32,7 +33,7 @@ const info: InformationItem[] = [
     address: "Blk 2, Lot 34, Barangay Sto. Nino, Something City, Batangas",
     pregnancyStatus: "N/A",
     organDonor: true, 
-    lastDiagnosis: "Hypertension",
+    lastDiagnosis: "Hypertension, High Blood Pressure, Osteoporosis, Arthritis, Asthma",
     diagnosisDate: "2026/01/15",
     placeOfDiagnosis: "Batangas Medical Center",
     allergies: "Shrimp, Peanuts, Shrimp, Rice, Dust, Pollen",
@@ -74,7 +75,16 @@ const info: InformationItem[] = [
   }
 ];
 
+
 const InformationModal = ({ isOpen, onClose, userData }: InformationModalProps) => {
+  useEffect(() => {
+    const handleEsc = (event: KeyboardEvent) => {
+      if (event.key === "Escape") onClose();
+    };
+    if (isOpen) window.addEventListener("keydown", handleEsc);
+    return () => window.removeEventListener("keydown", handleEsc);
+  }, [isOpen, onClose]);
+
   if (!isOpen) return null;
 
   const patientDetails = info.find((item) => item.id === userData?.id);
