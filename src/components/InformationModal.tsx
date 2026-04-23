@@ -82,24 +82,24 @@ const InformationModal = ({ isOpen, onClose, userData }: InformationModalProps) 
   return (
     <div className="fixed inset-0 flex items-center justify-center bg-black/30 p-4">
       <div className="relative w-full max-w-6xl max-h-[90vh] overflow-y-auto no-scrollbar 
-                      rounded-2xl bg-white/95 p-8 shadow-[0_20px_50px_rgba(0,0,0,0.3)] border border-white/20">
+                      rounded-2xl bg-[#E5E5E5] p-8 shadow-[0_20px_50px_rgba(0,0,0,0.3)] border border-white/20">
         {/* Header */}
-        <div className="mb-6 flex items-center justify-between border-b border-gray-200 pb-4">
-          <h2 className="text-xl font-bold text-gray-400 uppercase tracking-widest">
+        <div className="mb-7 flex items-center justify-between border-b border-white pb-4">
+          <h2 className="text-xl font-bold text-black uppercase tracking-widest">
             Information Details
           </h2>
-          <button onClick={onClose} className="rounded-full p-2 hover:bg-gray-100 text-gray-400 hover:text-black">
-            <XMarkIcon className="h-8 w-8" />
+          <button onClick={onClose} className="rounded-sm p-2 hover:bg-gray-100 text-gray-400 hover:text-black">
+            <XMarkIcon className="h-7 w-7" />
           </button>
         </div>
 
         <div className="grid grid-cols-1 gap-10 md:grid-cols-2">
           
           {/* Left Column: User Information */}
-          <section className="rounded-xl bg-gray-50/50 p-6 shadow-inner border border-gray-100">
+          <section className="rounded-xl bg-white p-6 shadow-inner border border-gray-100">
             <h3 className="mb-6 text-2xl font-bold text-gray-800 border-b border-gray-200 pb-2">User Information:</h3>
             <table className="w-full text-left text-base border-collapse">
-              <tbody className="divide-y divide-gray-200/50">
+              <tbody className="divide-y divide-gray-200">
                 <InfoRow label="Full Name:" value={`${userData?.firstName} ${userData?.lastName}`} />
                 <InfoRow label="Date of Birth:" value={patientDetails?.dateOfBirth} />
                 <InfoRow label="Age:" value={patientDetails?.age?.toString()} />
@@ -113,10 +113,10 @@ const InformationModal = ({ isOpen, onClose, userData }: InformationModalProps) 
           </section>
 
           {/* Right Column: Medical Information */}
-          <section className="rounded-xl bg-gray-50/50 p-6 shadow-inner border border-gray-100">
+          <section className="rounded-xl bg-white p-6 shadow-inner border border-gray-100">
             <h3 className="mb-6 text-2xl font-bold text-gray-800 border-b border-gray-200 pb-2">Medical Information:</h3>
             <table className="w-full text-left text-base border-collapse">
-              <tbody className="divide-y divide-gray-200/50">
+              <tbody className="divide-y divide-gray-200">
                 <InfoRow label="Last Diagnosis:" value={patientDetails?.lastDiagnosis} />
                 <InfoRow label="Diagnosis Date:" value={patientDetails?.diagnosisDate} />
                 <InfoRow label="Place of Diagnosis:" value={patientDetails?.placeOfDiagnosis} />
@@ -135,7 +135,7 @@ const InformationModal = ({ isOpen, onClose, userData }: InformationModalProps) 
 
 const InfoRow = ({ label, value }: { label: string; value?: string }) => (
   <tr>
-    <td className="py-4 pr-4 font-semibold text-blue-400 w-1/3 align-top">{label}</td>
+    <td className="py-4 pr-4 font-semibold text-blue-400 w-2/4 align-top">{label}</td>
     <td className="py-4 text-gray-600 whitespace-pre-line leading-relaxed">{value || "N/A"}</td>
   </tr>
 );
