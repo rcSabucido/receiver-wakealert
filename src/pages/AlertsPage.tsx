@@ -3,9 +3,13 @@ import { ViewModeToggle } from "../components/ViewModeToggle";
 import { FunnelIcon, TrashIcon } from "@heroicons/react/24/outline";
 import InformationModal from "../components/InformationModal";
 import { EllipsisVerticalIcon } from "@heroicons/react/16/solid";
+import { ArrowUpIcon } from "@heroicons/react/24/solid";
+import { ArrowDownIcon } from "@heroicons/react/24/solid";
 
 type ViewMode = "card" | "list";
 type StatusFilter = "all" | "ongoing" | "completed";
+type SortField = "id" | "name" | "alertTime" | "location" | "status";
+type SortDirection = "asc" | "desc";
 
 type AlertItem = {
   id: number;
@@ -56,6 +60,10 @@ export function AlertsPage() {
     alertId: number;
     top: number;
     left: number;
+  } | null>(null);
+  const [sortConfig, setSortConfig] = useState<{
+    field: SortField;
+    direction: SortDirection;
   } | null>(null);
   const [alertStatuses, setAlertStatuses] = useState<Record<number, boolean>>(
     Object.fromEntries(alerts.map((alert) => [alert.id, alert.isCompleted]))
@@ -128,6 +136,19 @@ export function AlertsPage() {
     setIsFilterModalOpen(false);
   };
 
+  const toggleSort = (field: SortField) => {
+    setSortConfig((prev) => {
+      if (prev === null || prev.field !== field) {
+        return { field, direction: "asc" };
+      }
+
+      return {
+        field,
+        direction: prev.direction === "asc" ? "desc" : "asc",
+      };
+    });
+  };
+
   const filteredAlerts = alertsData.filter((alert) => {
     const isCompleted = alertStatuses[alert.id] ?? alert.isCompleted;
 
@@ -166,6 +187,50 @@ export function AlertsPage() {
       .map((part) => part.trim().replace(/,+$/g, ""))
       .filter(Boolean)
       .join(", ");
+
+  const listAlerts =
+    sortConfig === null
+      ? filteredAlerts
+      : [...filteredAlerts].sort((a, b) => {
+          const aCompleted = alertStatuses[a.id] ?? a.isCompleted;
+          const bCompleted = alertStatuses[b.id] ?? b.isCompleted;
+
+          let compareValue = 0;
+
+          if (sortConfig.field === "id") {
+            compareValue = a.id - b.id;
+          }
+
+          if (sortConfig.field === "name") {
+            compareValue = `${a.firstName} ${a.lastName}`.localeCompare(`${b.firstName} ${b.lastName}`);
+          }
+
+          if (sortConfig.field === "alertTime") {
+            compareValue = a.alertTime.localeCompare(b.alertTime);
+          }
+
+          if (sortConfig.field === "location") {
+            compareValue = formatLocationOneLine(a.location).localeCompare(formatLocationOneLine(b.location));
+          }
+
+          if (sortConfig.field === "status") {
+            compareValue = Number(aCompleted) - Number(bCompleted);
+          }
+
+          return sortConfig.direction === "asc" ? compareValue : -compareValue;
+        });
+
+  const getSortIcon = (field: SortField) => {
+    if (sortConfig?.field !== field) {
+      return null;
+    }
+
+    return sortConfig.direction === "asc" ? (
+      <ArrowUpIcon className="h-3 w-3" />
+    ) : (
+      <ArrowDownIcon className="h-3 w-3" />
+    );
+  };
 
   return (
     <div className="flex-1 min-h-full bg-[#E5E5E5] p-8">
@@ -264,19 +329,54 @@ export function AlertsPage() {
               <thead className="bg-gray-50">
                 <tr>
                   <th scope="col" className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-600">
-                    Victim ID
+                    <button
+                      type="button"
+                      onClick={() => toggleSort("id")}
+                      className="inline-flex cursor-pointer items-center gap-1 hover:text-gray-900"
+                    >
+                      Victim ID
+                      {getSortIcon("id")}
+                    </button>
                   </th>
                   <th scope="col" className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-600">
-                    Name
+                    <button
+                      type="button"
+                      onClick={() => toggleSort("name")}
+                      className="inline-flex cursor-pointer items-center gap-1 hover:text-gray-900"
+                    >
+                      Name
+                      {getSortIcon("name")}
+                    </button>
                   </th>
                   <th scope="col" className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-600">
-                    Alert Time
+                    <button
+                      type="button"
+                      onClick={() => toggleSort("alertTime")}
+                      className="inline-flex cursor-pointer items-center gap-1 hover:text-gray-900"
+                    >
+                      Alert Time
+                      {getSortIcon("alertTime")}
+                    </button>
                   </th>
                   <th scope="col" className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-600">
-                    Location
+                    <button
+                      type="button"
+                      onClick={() => toggleSort("location")}
+                      className="inline-flex cursor-pointer items-center gap-1 hover:text-gray-900"
+                    >
+                      Location
+                      {getSortIcon("location")}
+                    </button>
                   </th>
                   <th scope="col" className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-600">
-                    Status
+                    <button
+                      type="button"
+                      onClick={() => toggleSort("status")}
+                      className="inline-flex cursor-pointer items-center gap-1 hover:text-gray-900"
+                    >
+                      Status
+                      {getSortIcon("status")}
+                    </button>
                   </th>
                   <th scope="col" className="px-4 py-3 text-right">
                     <span className="sr-only">Actions</span>
@@ -284,7 +384,7 @@ export function AlertsPage() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-200 bg-white">
-                {filteredAlerts.map((alert, index) => {
+                {listAlerts.map((alert, index) => {
                   const isCompleted = alertStatuses[alert.id] ?? alert.isCompleted;
 
                   return (
