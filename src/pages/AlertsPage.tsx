@@ -54,7 +54,10 @@ export function AlertsPage() {
   const [isInfoModalOpen, setIsInfoModalOpen] = useState(false);
   const [appliedFilter, setAppliedFilter] = useState<StatusFilter>("all");
   const [draftFilter, setDraftFilter] = useState<StatusFilter>("all");
-  const [isFilterModalOpen, setIsFilterModalOpen] = useState(false);
+  const [filterPopoverPosition, setFilterPopoverPosition] = useState<{
+    top: number;
+    left: number;
+  } | null>(null);
   const [pendingDeleteAlertId, setPendingDeleteAlertId] = useState<number | null>(null);
   const [openOptionsMenu, setOpenOptionsMenu] = useState<{
     alertId: number;
@@ -118,9 +121,14 @@ export function AlertsPage() {
     setPendingDeleteAlertId(null);
   };
 
-  const openFilterModal = () => {
+  const openFilterPopover = (anchor: HTMLButtonElement) => {
+    const anchorRect = anchor.getBoundingClientRect();
+
     setDraftFilter(appliedFilter);
-    setIsFilterModalOpen(true);
+    setFilterPopoverPosition({
+      top: anchorRect.bottom + 6,
+      left: anchorRect.right,
+    });
   };
 
   const clearFilter = () => {
@@ -128,12 +136,12 @@ export function AlertsPage() {
   };
 
   const cancelFilter = () => {
-    setIsFilterModalOpen(false);
+    setFilterPopoverPosition(null);
   };
 
   const applyFilter = () => {
     setAppliedFilter(draftFilter);
-    setIsFilterModalOpen(false);
+    setFilterPopoverPosition(null);
   };
 
   const toggleSort = (field: SortField) => {
@@ -238,7 +246,7 @@ export function AlertsPage() {
         <ViewModeToggle value={viewMode} onChange={setViewMode} />
         <button
           type="button"
-          onClick={openFilterModal}
+          onClick={(event) => openFilterPopover(event.currentTarget)}
           aria-label="Open filter"
           className="flex h-11 w-11 cursor-pointer items-center justify-center rounded-lg bg-[#D5FF9E] text-black transition-colors hover:bg-[#BEEA7A]"
         >
@@ -495,11 +503,19 @@ export function AlertsPage() {
         userData={selectedAlert}
       />
 
-      {isFilterModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 p-4">
-          <div className="w-full max-w-sm rounded-xl bg-white p-5 shadow-xl">
-            <div className="mb-4 flex items-center justify-between">
-              <h3 className="text-lg font-semibold text-gray-900">Filter Alerts</h3>
+      {filterPopoverPosition !== null && (
+        <>
+          <div
+            className="fixed inset-0 z-20"
+            onClick={cancelFilter}
+            aria-hidden="true"
+          />
+          <div
+            className="fixed z-40 w-72 -translate-x-full rounded-xl border border-gray-200 bg-white p-4 shadow-xl"
+            style={{ top: filterPopoverPosition.top, left: filterPopoverPosition.left }}
+          >
+            <div className="mb-3 flex items-center justify-between">
+              <h3 className="text-base font-semibold text-gray-900">Filter Alerts</h3>
               <button
                 type="button"
                 onClick={clearFilter}
@@ -509,7 +525,7 @@ export function AlertsPage() {
               </button>
             </div>
 
-            <div className="space-y-2">
+            <div className="space-y-1">
               <label className="flex cursor-pointer items-center gap-2 rounded-md px-2 py-1 hover:bg-gray-50">
                 <input
                   type="radio"
@@ -544,7 +560,7 @@ export function AlertsPage() {
               </label>
             </div>
 
-            <div className="mt-6 flex justify-end gap-2">
+            <div className="mt-4 flex justify-end gap-2">
               <button
                 type="button"
                 onClick={cancelFilter}
@@ -561,7 +577,7 @@ export function AlertsPage() {
               </button>
             </div>
           </div>
-        </div>
+        </>
       )}
 
       {pendingDeleteAlertId !== null && (
