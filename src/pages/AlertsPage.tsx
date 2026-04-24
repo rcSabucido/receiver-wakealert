@@ -236,21 +236,60 @@ export function AlertsPage() {
         </div>
       ) : (
         <div className="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
-          <ul className="divide-y divide-gray-200">
-            {filteredAlerts.map((alert, index) => (
-              <li key={`${alert.id}-${index}`} className="flex items-center justify-between p-4">
-                <div>
-                  <h3 className="font-semibold text-gray-900">
-                    {alert.firstName} {alert.lastName}
-                  </h3>
-                  <p className="text-sm text-gray-600">
-                    ID: {alert.id} • {alert.location.split("\n")[0]}
-                  </p>
-                </div>
-                <p className="text-sm text-gray-600">{alert.alertTime}</p>
-              </li>
-            ))}
-          </ul>
+          <div className="overflow-x-auto">
+            <table className="min-w-full divide-y divide-gray-200">
+              <thead className="bg-gray-50">
+                <tr>
+                  <th scope="col" className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-600">
+                    Victim ID
+                  </th>
+                  <th scope="col" className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-600">
+                    Name
+                  </th>
+                  <th scope="col" className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-600">
+                    Alert Time
+                  </th>
+                  <th scope="col" className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-600">
+                    Location
+                  </th>
+                  <th scope="col" className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-600">
+                    Status
+                  </th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-200 bg-white">
+                {filteredAlerts.map((alert, index) => {
+                  const isCompleted = alertStatuses[alert.id] ?? alert.isCompleted;
+
+                  return (
+                    <tr key={`${alert.id}-${index}`}>
+                      <td className="whitespace-nowrap px-4 py-3 text-sm text-gray-900">#{alert.id}</td>
+                      <td className="whitespace-nowrap px-4 py-3 text-sm text-gray-800">
+                        {alert.firstName} {alert.lastName}
+                      </td>
+                      <td className="whitespace-nowrap px-4 py-3 text-sm text-gray-700">{alert.alertTime}</td>
+                      <td className="max-w-xs px-4 py-3 text-sm leading-5 text-gray-700">
+                        <p className="truncate" title={alert.location.replace(/\n/g, ", ")}>
+                          {alert.location.replace(/\n/g, ", ")}
+                        </p>
+                      </td>
+                      <td className="whitespace-nowrap px-4 py-3 text-sm font-semibold">
+                        <span
+                          className={`inline-flex rounded-md px-3 py-1 text-xs font-semibold transition-colors duration-200 ${
+                            isCompleted
+                              ? "bg-green-100 text-green-700"
+                              : "bg-red-100 text-red-700"
+                          }`}
+                        >
+                          {isCompleted ? "Completed" : "Ongoing"}
+                        </span>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
         </div>
       )}
 
