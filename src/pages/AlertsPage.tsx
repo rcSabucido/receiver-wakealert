@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { ViewModeToggle } from "../components/ViewModeToggle";
 import { FunnelIcon, TrashIcon } from "@heroicons/react/24/outline";
+import InformationModal from "../components/InformationModal";
 
 type ViewMode = "card" | "list";
 type StatusFilter = "all" | "ongoing" | "completed";
@@ -44,6 +45,8 @@ const alerts: AlertItem[] = [
 export function AlertsPage() {
   const [alertsData, setAlertsData] = useState<AlertItem[]>(alerts);
   const [viewMode, setViewMode] = useState<ViewMode>("card");
+  const [selectedAlert, setSelectedAlert] = useState<AlertItem | null>(null);
+  const [isInfoModalOpen, setIsInfoModalOpen] = useState(false);
   const [appliedFilter, setAppliedFilter] = useState<StatusFilter>("all");
   const [draftFilter, setDraftFilter] = useState<StatusFilter>("all");
   const [isFilterModalOpen, setIsFilterModalOpen] = useState(false);
@@ -52,6 +55,7 @@ export function AlertsPage() {
     Object.fromEntries(alerts.map((alert) => [alert.id, alert.isCompleted]))
   );
 
+  
   const toggleAlertStatus = (alertId: number) => {
     setAlertStatuses((prev) => ({
       ...prev,
@@ -195,12 +199,26 @@ export function AlertsPage() {
               <div className="mt-1 flex items-center justify-between gap-1">
                 <button
                   type="button"
-                  className={`flex h-10 items-center justify-center cursor-pointer rounded-lg bg-[#D5FF9E] px-4 text-sm font-semibold text-black transition-colors duration-200 ease-out hover:bg-[#BEEA7A] ${
+                  onClick={() => {
+                    setSelectedAlert(alert);
+                    setIsInfoModalOpen(true);
+                  }}
+                  className={`flex h-10 items-center justify-center cursor-pointer rounded-lg 
+                    bg-[#D5FF9E] px-4 text-sm font-semibold hover:bg-[#BEEA7A] ${
                     isCompleted ? "flex-1" : "w-full"
                   }`}
                 >
                   View Information
                 </button>
+
+                <InformationModal 
+                  isOpen={isInfoModalOpen} 
+                  onClose={() => {
+                    setIsInfoModalOpen(false);
+                    setSelectedAlert(null);
+                  }} 
+                  userData={selectedAlert} 
+                />
                 {isCompleted && (
                   <button
                     type="button"
