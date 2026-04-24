@@ -235,15 +235,6 @@ export function AlertsPage() {
                 >
                   View Information
                 </button>
-
-                <InformationModal 
-                  isOpen={isInfoModalOpen} 
-                  onClose={() => {
-                    setIsInfoModalOpen(false);
-                    setSelectedAlert(null);
-                  }} 
-                  userData={selectedAlert} 
-                />
                 {isCompleted && (
                   <button
                     type="button"
@@ -387,6 +378,15 @@ export function AlertsPage() {
           )}
         </div>
       )}
+
+      <InformationModal
+        isOpen={isInfoModalOpen}
+        onClose={() => {
+          setIsInfoModalOpen(false);
+          setSelectedAlert(null);
+        }}
+        userData={selectedAlert}
+      />
 
       {isFilterModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 p-4">
