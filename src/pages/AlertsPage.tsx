@@ -160,6 +160,13 @@ export function AlertsPage() {
   const menuAlertIsCompleted =
     menuAlert === null ? false : (alertStatuses[menuAlert.id] ?? menuAlert.isCompleted);
 
+  const formatLocationOneLine = (location: string) =>
+    location
+      .split("\n")
+      .map((part) => part.trim().replace(/,+$/g, ""))
+      .filter(Boolean)
+      .join(", ");
+
   return (
     <div className="flex-1 min-h-full bg-[#E5E5E5] p-8">
       <div className="mb-6 flex items-center justify-between gap-4">
@@ -288,8 +295,8 @@ export function AlertsPage() {
                       </td>
                       <td className="whitespace-nowrap px-4 py-3 text-sm text-gray-700">{alert.alertTime}</td>
                       <td className="max-w-xs px-4 py-3 text-sm leading-5 text-gray-700">
-                        <p className="truncate" title={alert.location.replace(/\n/g, ", ")}>
-                          {alert.location.replace(/\n/g, ", ")}
+                        <p className="truncate" title={formatLocationOneLine(alert.location)}>
+                          {formatLocationOneLine(alert.location)}
                         </p>
                       </td>
                       <td className="whitespace-nowrap px-4 py-3 text-sm font-semibold">
