@@ -2,6 +2,7 @@ import { useState } from "react";
 import { ViewModeToggle } from "../components/ViewModeToggle";
 import { FunnelIcon, TrashIcon } from "@heroicons/react/24/outline";
 import InformationModal from "../components/InformationModal";
+import { EllipsisVerticalIcon } from "@heroicons/react/16/solid";
 
 type ViewMode = "card" | "list";
 type StatusFilter = "all" | "ongoing" | "completed";
@@ -51,6 +52,11 @@ export function AlertsPage() {
   const [draftFilter, setDraftFilter] = useState<StatusFilter>("all");
   const [isFilterModalOpen, setIsFilterModalOpen] = useState(false);
   const [pendingDeleteAlertId, setPendingDeleteAlertId] = useState<number | null>(null);
+  const [openOptionsMenu, setOpenOptionsMenu] = useState<{
+    alertId: number;
+    top: number;
+    left: number;
+  } | null>(null);
   const [alertStatuses, setAlertStatuses] = useState<Record<number, boolean>>(
     Object.fromEntries(alerts.map((alert) => [alert.id, alert.isCompleted]))
   );
@@ -65,11 +71,26 @@ export function AlertsPage() {
 
   const deleteAlert = (alertId: number) => {
     setAlertsData((prev) => prev.filter((alert) => alert.id !== alertId));
+    setOpenOptionsMenu((prev) => (prev?.alertId === alertId ? null : prev));
     setAlertStatuses((prev) => {
       const next = { ...prev };
       delete next[alertId];
       return next;
     });
+  };
+
+  const toggleOptionsMenu = (alertId: number, anchor: HTMLButtonElement) => {
+    const anchorRect = anchor.getBoundingClientRect();
+
+    setOpenOptionsMenu((prev) =>
+      prev?.alertId === alertId
+        ? null
+        : {
+            alertId,
+            top: anchorRect.bottom + 6,
+            left: anchorRect.right,
+          }
+    );
   };
 
   const openDeleteConfirmation = (alertId: number) => {
@@ -134,6 +155,10 @@ export function AlertsPage() {
 
   const pendingDeleteAlert =
     pendingDeleteAlertId === null ? null : alertsData.find((alert) => alert.id === pendingDeleteAlertId);
+  const menuAlert =
+    openOptionsMenu === null ? null : alertsData.find((alert) => alert.id === openOptionsMenu.alertId) ?? null;
+  const menuAlertIsCompleted =
+    menuAlert === null ? false : (alertStatuses[menuAlert.id] ?? menuAlert.isCompleted);
 
   return (
     <div className="flex-1 min-h-full bg-[#E5E5E5] p-8">
@@ -255,6 +280,9 @@ export function AlertsPage() {
                   <th scope="col" className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-600">
                     Status
                   </th>
+                  <th scope="col" className="px-4 py-3 text-right">
+                    <span className="sr-only">Actions</span>
+                  </th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-200 bg-white">
@@ -284,12 +312,79 @@ export function AlertsPage() {
                           {isCompleted ? "Completed" : "Ongoing"}
                         </span>
                       </td>
+                      <td className="whitespace-nowrap px-4 py-3 text-right">
+                        <button
+                          type="button"
+                          aria-label={`Open options for alert ${alert.id}`}
+                          onClick={(event) => toggleOptionsMenu(alert.id, event.currentTarget)}
+                          className="inline-flex h-8 w-8 cursor-pointer items-center justify-center rounded-md text-gray-600 transition-colors hover:bg-gray-100 hover:text-gray-900"
+                        >
+                          <EllipsisVerticalIcon className="h-5 w-5" />
+                        </button>
+                      </td>
                     </tr>
                   );
                 })}
               </tbody>
             </table>
           </div>
+
+          {openOptionsMenu !== null && menuAlert !== null && (
+            <>
+              <div
+                className="fixed inset-0 z-20"
+                onClick={() => setOpenOptionsMenu(null)}
+                aria-hidden="true"
+              />
+              <div
+                className="fixed z-30 w-44 -translate-x-full rounded-lg border border-gray-200 bg-white p-1 shadow-lg"
+                style={{ top: openOptionsMenu.top, left: openOptionsMenu.left }}
+              >
+                <button
+                  type="button"
+                  onClick={() => {
+                    setSelectedAlert(menuAlert);
+                    setIsInfoModalOpen(true);
+                    setOpenOptionsMenu(null);
+                  }}
+                  className="block w-full cursor-pointer rounded-md px-3 py-2 text-left text-sm text-gray-800 transition-colors hover:bg-gray-100"
+                >
+                  View Information
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setOpenOptionsMenu(null);
+                  }}
+                  className="block w-full cursor-pointer rounded-md px-3 py-2 text-left text-sm text-gray-800 transition-colors hover:bg-gray-100"
+                >
+                  View Location
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    toggleAlertStatus(menuAlert.id);
+                    setOpenOptionsMenu(null);
+                  }}
+                  className="block w-full cursor-pointer rounded-md px-3 py-2 text-left text-sm text-gray-800 transition-colors hover:bg-gray-100"
+                >
+                  Change Status
+                </button>
+                {menuAlertIsCompleted && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      openDeleteConfirmation(menuAlert.id);
+                      setOpenOptionsMenu(null);
+                    }}
+                    className="block w-full cursor-pointer rounded-md px-3 py-2 text-left text-sm text-red-700 transition-colors hover:bg-red-50"
+                  >
+                    Delete Alert
+                  </button>
+                )}
+              </div>
+            </>
+          )}
         </div>
       )}
 
