@@ -5,6 +5,7 @@ import InformationModal from "../components/InformationModal";
 import { EllipsisVerticalIcon } from "@heroicons/react/16/solid";
 import { ArrowUpIcon } from "@heroicons/react/24/solid";
 import { ArrowDownIcon } from "@heroicons/react/24/solid";
+import { useNavigate } from "react-router-dom";
 
 type ViewMode = "card" | "list";
 type StatusFilter = "all" | "ongoing" | "completed";
@@ -51,6 +52,7 @@ export function AlertsPage() {
   const [alertsData, setAlertsData] = useState<AlertItem[]>(alerts);
   const [viewMode, setViewMode] = useState<ViewMode>("card");
   const [selectedAlert, setSelectedAlert] = useState<AlertItem | null>(null);
+  const [locationData, setLocationData] = useState<AlertItem | null>(null);
   const [isInfoModalOpen, setIsInfoModalOpen] = useState(false);
   const [appliedFilter, setAppliedFilter] = useState<StatusFilter>("all");
   const [draftFilter, setDraftFilter] = useState<StatusFilter>("all");
@@ -72,6 +74,14 @@ export function AlertsPage() {
     Object.fromEntries(alerts.map((alert) => [alert.id, alert.isCompleted]))
   );
 
+  const navigate = useNavigate(); 
+  const handleViewLocation = (alert: AlertItem) => {
+  navigate("/locations", { state: { userData: alert } });
+};
+
+  const openLocationPage = (alert: AlertItem) => {
+  setLocationData(alert);
+};
   
   const toggleAlertStatus = (alertId: number) => {
     setAlertStatuses((prev) => ({
@@ -283,6 +293,10 @@ export function AlertsPage() {
                 </div>
                 <button
                   type="button"
+                  onClick={() => {
+                    handleViewLocation(alert); 
+                    setOpenOptionsMenu(null);
+                  }}
                   aria-label="Location placeholder"
                   className="h-12 w-12 shrink-0 cursor-pointer rounded-md border border-gray-300 bg-gray-100"
                 />
