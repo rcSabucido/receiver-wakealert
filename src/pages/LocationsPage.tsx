@@ -43,7 +43,7 @@ const initialAlerts: AlertItem[] = [
     latitude: "-25.8482763", 
     longitude: "32.5938118", 
     alertTime: "2026-02-21 17:05", 
-    isCompleted: false 
+    isCompleted: true 
   },
   { id: 5, 
     firstName: "Luis", 
@@ -52,6 +52,14 @@ const initialAlerts: AlertItem[] = [
     longitude: "32.5938118", 
     alertTime: "2026-02-21 12:30", 
     isCompleted: false 
+  },
+  { id: 6, 
+    firstName: "Sofia", 
+    lastName: "Lopez", 
+    latitude: "-25.8482763", 
+    longitude: "32.5938118", 
+    alertTime: "2026-02-21 19:45", 
+    isCompleted: true 
   },
 ];
 
