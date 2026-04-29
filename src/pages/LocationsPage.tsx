@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useLocation } from "react-router-dom";
 
 type AlertItem = {
   id: number;
@@ -11,38 +12,58 @@ type AlertItem = {
 };
 
 const initialAlerts: AlertItem[] = [
-  {
-    id: 1,
-    firstName: "Juan ",
-    lastName: "Dela Cruz",
-    latitude: "-25.8482763",
-    longitude: "32.5938118",
-    alertTime: "2026-02-21 14:35",
-    isCompleted: false,
-  },
-  {
-    id: 2,
-    firstName: "Pedro ",
-    lastName: "Reyes",
-    latitude: "-25.8482763",
-    longitude: "32.5938118",
-    alertTime: "2026-02-21 22:47",
-    isCompleted: false,
-  },
-  {
-    id: 3,
-    firstName: "Maria ",
-    lastName: "Santos",
-    latitude: "-25.8482763",
-    longitude: "32.5938118",
-    alertTime: "2026-02-21 09:18",
-    isCompleted: false,
-  },
+  { id: 1, 
+    firstName: "Juan", 
+    lastName: "Dela Cruz", 
+    latitude: "-25.8482763", 
+    longitude: "32.5938118", 
+    alertTime: "2026-02-21 14:35", 
+    isCompleted: false },
+  { id: 2, 
+    firstName: "Pedro", 
+    lastName: "Reyes", 
+    latitude: "-25.8482763", 
+    longitude: "32.5938118", 
+    alertTime: "2026-02-21 22:47", 
+    isCompleted: true },
+  { id: 3, 
+    firstName: "Maria", 
+    lastName: "Santos", 
+    latitude: "-25.8482763", 
+    longitude: "32.5938118", 
+    alertTime: "2026-02-21 09:18", 
+    isCompleted: false },
 ];
 
 export function LocationsPage() {
+  const location = useLocation();
+  const userData = location.state?.userData;
+
   const [alertsData, setAlertsData] = useState<AlertItem[]>(initialAlerts);
   const [activeTab, setActiveTab] = useState<"Ongoing" | "Completed">("Ongoing");
+  const [selectedAlertId, setSelectedAlertId] = useState<number | null>(null);
+
+  useEffect(() => {
+    if (userData) {
+      setSelectedAlertId(userData.id);
+      
+      setAlertsData((prev) =>
+        prev.map((alert) =>
+          alert.id === userData.id
+            ? { 
+                ...alert, 
+                firstName: userData.firstName, 
+                lastName: userData.lastName, 
+                alertTime: userData.alertTime,
+                isCompleted: userData.isCompleted 
+              }
+            : alert
+        )
+      );
+
+      setActiveTab(userData.isCompleted ? "Completed" : "Ongoing");
+    }
+  }, [userData]);
 
   const toggleStatus = (id: number) => {
     setAlertsData((prev) =>
@@ -52,101 +73,106 @@ export function LocationsPage() {
     );
   };
 
-  const filteredAlerts = alertsData.filter((alert) => 
+  const filteredAlerts = alertsData.filter((alert) =>
     activeTab === "Ongoing" ? !alert.isCompleted : alert.isCompleted
   );
 
   return (
-    <div className="flex h-screen w-full bg-[#E5E7EB] overflow-hidden">
+    <div className="flex h-screen w-full bg-[#E5E7EB] overflow-hidden font-sans">
       
-      {/* Left Column: List Section */}
+      {/* Sidebar List Section */}
       <div className="w-[420px] flex flex-col bg-[#F3F4F6] border-r border-gray-300">
         
-        {/* Top Toggle Bar */}
-        <div className="p-4 bg-gray-100">
+        {/* Navigation Tabs */}
+        <div className="p-4 bg-gray-100 shadow-sm">
           <div className="flex bg-[#3F8EFC] p-1 rounded-lg border border-blue-600">
-            <button
-              onClick={() => setActiveTab("Ongoing")}
-              className={`flex-1 py-2 text-sm font-bold rounded-md transition-all ${
-                activeTab === "Ongoing" 
-                ? "bg-[#D5FF9E] text-black" 
-                : "text-white"
-              }`}
+            <button 
+              onClick={() => setActiveTab("Ongoing")} 
+              className={`flex-1 py-2 text-sm font-bold rounded-md transition-all ${activeTab === "Ongoing" ? "bg-[#D5FF9E] text-black shadow-inner" : "text-white"}`}
             >
               Ongoing
             </button>
-            <button
-              onClick={() => setActiveTab("Completed")}
-              className={`flex-1 py-2 text-sm font-bold rounded-md transition-all ${
-                activeTab === "Completed" 
-                ? "bg-[#D5FF9E] text-black" 
-                : "text-white"
-              }`}
+            <button 
+              onClick={() => setActiveTab("Completed")} 
+              className={`flex-1 py-2 text-sm font-bold rounded-md transition-all ${activeTab === "Completed" ? "bg-[#D5FF9E] text-black shadow-inner" : "text-white"}`}
             >
               Completed
             </button>
           </div>
         </div>
 
-        {/* Scrollable Cards */}
-        <div className="flex-1 overflow-y-auto no-scrollbar p-4 space-y-4">
-          {filteredAlerts.map((alert) => (
-            <div key={alert.id} className="bg-white rounded-xl shadow-sm border border-gray-200 p-5">
-              
-              <div className="flex justify-between items-center mb-4 border-b border-gray-100 pb-2">
-                <span className="font-semibold text-gray-800 text-lg">#{alert.id}</span>
-                <button
-                  onClick={() => toggleStatus(alert.id)}
-                  className={`text-[13px] px-3 py-1 rounded font-semibold transition-colors ${
-                    alert.isCompleted 
-                    ? "bg-green-100 text-green-600" 
-                    : "bg-red-100 text-red-400"
-                  }`}
-                >
-                  {alert.isCompleted ? "Completed" : "Ongoing"}
+        {/* Scrollable List of Cards */}
+        <div className="flex-1 overflow-y-auto p-4 space-y-4 no-scrollbar">
+          {filteredAlerts.map((alert) => {
+            const isHighlighted = selectedAlertId === alert.id;
+
+            return (
+              <div 
+                key={alert.id} 
+                onClick={() => setSelectedAlertId(alert.id)}
+                className={`bg-white rounded-xl p-6 transition-all duration-300 cursor-pointer border-2 ${
+                  isHighlighted 
+                    ? "border-[#3F8EFC] shadow-[0_0_15px_rgba(63,142,252,0.15)] ring-1 ring-[#3F8EFC]" 
+                    : "border-transparent shadow-sm"
+                }`}
+              >
+                {/* ID and Badge */}
+                <div className="flex justify-between items-center mb-6 border-b border-gray-100 pb-3">
+                  <span className={`font-bold text-xl ${isHighlighted ? "text-[#3F8EFC]" : "text-gray-800"}`}>
+                    #{alert.id}
+                  </span>
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      toggleStatus(alert.id);
+                    }}
+                    className={`text-[10px] px-3 py-1 rounded font-bold uppercase tracking-wider ${
+                      alert.isCompleted ? "bg-green-100 text-green-600" : "bg-red-100 text-red-500"
+                    }`}
+                  >
+                    {alert.isCompleted ? "Completed" : "Ongoing"}
+                  </button>
+                </div>
+
+                {/* Patient Data Grid - Matching your Screenshot */}
+                <div className="space-y-4 mb-6">
+                  <div className="flex justify-between items-center">
+                    <span className="text-gray-500 font-medium text-sm">Latitude:</span>
+                    <span className="text-gray-700 font-medium text-sm tracking-tight">{alert.latitude}</span>
+                  </div>
+                  
+                  <div className="flex justify-between items-center">
+                    <span className="text-gray-500 font-medium text-sm">Longitude:</span>
+                    <span className="text-gray-700 font-medium text-sm tracking-tight">{alert.longitude}</span>
+                  </div>
+                  
+                  <div className="flex justify-between items-center">
+                    <span className="text-gray-500 font-medium text-sm">Name:</span>
+                    <span className="text-gray-700 font-medium text-sm">{`${alert.firstName} ${alert.lastName}`}</span>
+                  </div>
+                  
+                  <div className="flex justify-between items-center">
+                    <span className="text-gray-500 font-medium text-sm">Alert Time:</span>
+                    <span className="text-gray-700 font-medium text-sm tracking-tight">{alert.alertTime}</span>
+                  </div>
+                </div>
+
+                {/* View Information Button */}
+                <button className="w-full bg-[#D5FF9E] hover:bg-[#c2f080] text-black font-bold py-3 rounded-lg text-sm shadow-sm transition-all active:scale-[0.98]">
+                  View Information
                 </button>
               </div>
-
-              {/* Data Rows - All Fields Included */}
-              <div className="space-y-3 mb-5">
-                <div className="flex justify-between items-center text-sm">
-                  <span className="text-gray-700 font-medium">Latitude:</span>
-                  <span className="text-gray-700 font-semibold">{alert.latitude}</span>
-                </div>
-
-                <div className="flex justify-between items-center text-sm">
-                  <span className="text-gray-700 font-medium">Longitude:</span>
-                  <span className="text-gray-700 font-semibold">{alert.longitude}</span>
-                </div>
-                
-                <div className="flex justify-between items-center text-sm">
-                  <span className="text-gray-700 font-medium">Name:</span>
-                  <span className="text-gray-700 font-semibold">{alert.firstName} {alert.lastName}</span>
-                </div>
-                
-                <div className="flex justify-between items-center text-sm">
-                  <span className="text-gray-700 font-medium">Alert Time:</span>
-                  <span className="text-gray-700 font-semibold">{alert.alertTime}</span>
-                </div>
-              </div>
-
-              <button className="w-full bg-[#D5FF9E] hover:bg-[#c2f080] text-black font-semibold 
-                      py-2.5 rounded-lg transition-colors text-sm shadow-sm">
-                View Information
-              </button>
-            </div>
-          ))}
+            );
+          })}
         </div>
       </div>
 
-      {/* Right Column: Empty Map View Object */}
-      <div className="flex-1 bg-white relative">
-        <div className="absolute inset-0 flex items-center justify-center opacity-30">
-           <div className="text-center font-mono text-gray-400">
-              <p className="text-2xl font-bold uppercase tracking-widest">[ Map View Object ]</p>
-              <div className="h-1 w-48 bg-gray-300 mx-auto mt-2 rounded-full"></div>
-           </div>
-        </div>
+      {/* Map View Object Placeholder */}
+      <div className="flex-1 bg-white flex items-center justify-center relative">
+         {/* Gi-follow nako ang design sa imong first pic nga naay map sa background */}
+         <div className="absolute inset-0 bg-gray-100 flex items-center justify-center opacity-40">
+           <p className="text-gray-400 font-black italic tracking-widest uppercase">[ Map Component Placeholder ]</p>
+         </div>
       </div>
 
     </div>
