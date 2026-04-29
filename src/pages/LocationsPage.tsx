@@ -106,10 +106,10 @@ export function LocationsPage() {
         }
       }, 150);
 
-      // Clear highlight after 3 seconds
+      // Clear highlight after 500 milliseconds
       const timer = setTimeout(() => {
         setSelectedAlertId(null);
-      }, 3000); 
+      }, 500); 
 
       return () => clearTimeout(timer);
     }
