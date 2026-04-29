@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { useLocation } from "react-router-dom";
+import InformationModal from "../components/InformationModal"; 
 
 type AlertItem = {
   id: number;
@@ -26,16 +27,28 @@ const initialAlerts: AlertItem[] = [
     latitude: "-25.8482763", 
     longitude: "32.5938118", 
     alertTime: "2026-02-21 22:47", 
-    isCompleted: true 
-  },
+    isCompleted: true },
   { id: 3, 
     firstName: "Maria", 
     lastName: "Santos", 
     latitude: "-25.8482763", 
     longitude: "32.5938118", 
     alertTime: "2026-02-21 09:18", 
-    isCompleted: false 
-  },
+    isCompleted: false },
+  { id: 4, 
+    firstName: "Ana", 
+    lastName: "Garcia", 
+    latitude: "-25.8482763", 
+    longitude: "32.5938118", 
+    alertTime: "2026-02-21 17:05", 
+    isCompleted: false },
+  { id: 5, 
+    firstName: "Luis", 
+    lastName: "Martinez", 
+    latitude: "-25.8482763", 
+    longitude: "32.5938118", 
+    alertTime: "2026-02-21 12:30", 
+    isCompleted: false },
 ];
 
 export function LocationsPage() {
@@ -44,6 +57,10 @@ export function LocationsPage() {
   const [alertsData, setAlertsData] = useState<AlertItem[]>(initialAlerts);
   const [activeTab, setActiveTab] = useState<"Ongoing" | "Completed">("Ongoing");
   const [selectedAlertId, setSelectedAlertId] = useState<number | null>(null);
+
+  {/* Modal States */}
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [selectedPatient, setSelectedPatient] = useState<any>(null);
 
   useEffect(() => {
     if (userData) {
@@ -67,7 +84,7 @@ export function LocationsPage() {
 
       const timer = setTimeout(() => {
         setSelectedAlertId(null);
-      }, 3000);
+      }, 400); 
 
       return () => clearTimeout(timer);
     }
@@ -84,6 +101,11 @@ export function LocationsPage() {
   const filteredAlerts = alertsData.filter((alert) =>
     activeTab === "Ongoing" ? !alert.isCompleted : alert.isCompleted
   );
+
+  const handleOpenModal = (alert: AlertItem) => {
+    setSelectedPatient(alert);
+    setIsModalOpen(true);
+  };
 
   return (
     <div className="flex h-screen w-full bg-[#E5E7EB] overflow-hidden font-sans">
@@ -164,8 +186,12 @@ export function LocationsPage() {
                   </div>
                 </div>
 
-                <button className="w-full cursor-pointer bg-[#D5FF9E] hover:bg-[#c2f080] text-black font-semibold py-3 
-                        rounded-lg text-sm shadow-sm transition-all active:scale-[0.98]">
+                {/* View Information Button with Modal Trigger */}
+                <button 
+                  onClick={() => handleOpenModal(alert)}
+                  className="w-full cursor-pointer bg-[#D5FF9E] hover:bg-[#c2f080] text-black font-semibold py-3 
+                        rounded-lg text-sm shadow-sm transition-all active:scale-[0.98]"
+                >
                   View Information
                 </button>
               </div>
@@ -174,12 +200,19 @@ export function LocationsPage() {
         </div>
       </div>
 
-      {/* Map View Object Placeholder */}
+      {/* Map View Placeholder */}
       <div className="flex-1 bg-white relative">
          <div className="absolute inset-0 bg-gray-100 flex items-center justify-center opacity-40">
            <p className="text-gray-400 font-black italic tracking-widest uppercase">[ Map Component Placeholder ]</p>
          </div>
       </div>
+
+      {/* Modal Component */}
+      <InformationModal 
+        isOpen={isModalOpen} 
+        onClose={() => setIsModalOpen(false)} 
+        userData={selectedPatient} 
+      />
 
     </div>
   );
