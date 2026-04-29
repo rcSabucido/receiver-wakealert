@@ -104,7 +104,22 @@ const info: InformationItem[] = [
     medication: "Aspirin, Atorvastatin, Morphine, Vicodin, Percocet, Penicillin",
     medicalHistory: "Hypertension, High Blood Pressure, Diabetes (Type 2),Asthma",
     medicalNote: "Patient should maintain a heart-healthy diet and exercise regularly."
-  }
+  },
+  {id: 6,
+    dateOfBirth: "1993/02/14",
+    age: 31,
+    primaryContact: "09xxxxxxxxx ( Friend )",
+    address: "654 Another St, Barangay Sto. Nino, Something City, Batangas",
+    pregnancyStatus: "N/A",
+    organDonor: false,
+    lastDiagnosis: "Anxiety Disorder",
+    diagnosisDate: "2026/01/25",
+    placeOfDiagnosis: "Batangas Medical Center",
+    allergies: "None",
+    medication: "Alprazolam, Diazepam",
+    medicalHistory: "Anxiety Disorder",
+    medicalNote: "Patient needs regular mental health check-ups and therapy sessions."
+  },
 ];
 
 
