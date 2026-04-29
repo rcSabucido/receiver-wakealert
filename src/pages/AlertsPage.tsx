@@ -46,13 +46,35 @@ const alerts: AlertItem[] = [
     alertTime: "2026-04-22 22:47",
     isCompleted: false,
   },
+  {
+    id: 4,
+    firstName: "Ana",
+    lastName: "Garcia",
+    location: "Blk 3, Lot 15,\nBarangay San Roque, Something City,\nBatangas",
+    alertTime: "2026-04-21 17:05",
+    isCompleted: true,
+  },
+  {
+    id: 5,
+    firstName: "Luis",
+    lastName: "Martinez",
+    location: "Blk 8, Lot 20,\nBarangay Santo Tomas, Something City,\nLaguna",
+    alertTime: "2026-04-21 12:30",
+    isCompleted: false,
+  },
+  { id: 6, 
+    firstName: "Sofia", 
+    lastName: "Lopez", 
+    location: "Blk 6, Lot 12,\nBarangay San Isidro, Something City,\nQuezon", 
+    alertTime: "2026-04-21 19:45", 
+    isCompleted: true 
+  }
 ];
 
 export function AlertsPage() {
   const [alertsData, setAlertsData] = useState<AlertItem[]>(alerts);
   const [viewMode, setViewMode] = useState<ViewMode>("card");
   const [selectedAlert, setSelectedAlert] = useState<AlertItem | null>(null);
-  const [locationData, setLocationData] = useState<AlertItem | null>(null);
   const [isInfoModalOpen, setIsInfoModalOpen] = useState(false);
   const [appliedFilter, setAppliedFilter] = useState<StatusFilter>("all");
   const [draftFilter, setDraftFilter] = useState<StatusFilter>("all");
@@ -77,10 +99,6 @@ export function AlertsPage() {
   const navigate = useNavigate(); 
   const handleViewLocation = (alert: AlertItem) => {
   navigate("/locations", { state: { userData: alert } });
-};
-
-  const openLocationPage = (alert: AlertItem) => {
-  setLocationData(alert);
 };
   
   const toggleAlertStatus = (alertId: number) => {
@@ -295,7 +313,6 @@ export function AlertsPage() {
                   type="button"
                   onClick={() => {
                     handleViewLocation(alert); 
-                    setOpenOptionsMenu(null);
                   }}
                   aria-label="Location placeholder"
                   className="h-12 w-12 shrink-0 cursor-pointer rounded-md border border-gray-300 bg-gray-100"
