@@ -29,7 +29,7 @@ const initialAlerts: AlertItem[] = [
     alertTime: "2026-02-21 22:47", 
     isCompleted: true 
   },
-  { id: 5, 
+  { id: 3, 
     firstName: "Maria", 
     lastName: "Santos", 
     latitude: "-25.8482763", 
@@ -45,7 +45,7 @@ const initialAlerts: AlertItem[] = [
     alertTime: "2026-02-21 17:05", 
     isCompleted: false 
   },
-  { id: 3, 
+  { id: 5, 
     firstName: "Luis", 
     lastName: "Martinez", 
     latitude: "-25.8482763", 
@@ -66,7 +66,6 @@ export function LocationsPage() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedPatient, setSelectedPatient] = useState<any>(null);
 
-  // Ref to store card elements with the correct TypeScript type
   const cardRefs = useRef<{ [key: number]: HTMLDivElement | null }>({});
 
   useEffect(() => {
@@ -87,11 +86,8 @@ export function LocationsPage() {
         )
       );
 
-      // Switch tab based on the alert status
       setActiveTab(userData.isCompleted ? "Completed" : "Ongoing");
 
-      // Auto-scroll logic: focuses the screen on the highlighted card
-      // Using a small delay to ensure the DOM is ready after a potential tab switch
       setTimeout(() => {
         const element = cardRefs.current[userData.id];
         if (element) {
@@ -160,7 +156,6 @@ export function LocationsPage() {
             return (
               <div 
                 key={alert.id} 
-                // FIXED: Wrapped in curly braces to satisfy TypeScript's void requirement
                 ref={(el) => { cardRefs.current[alert.id] = el; }}
                 className={`bg-white rounded-xl p-6 transition-all duration-700 border-2 ${
                   isHighlighted 
