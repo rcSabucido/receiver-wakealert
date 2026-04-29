@@ -72,6 +72,38 @@ const info: InformationItem[] = [
     medication: "Lisinopril, Morphine, Vicodin, Percocet, Penicillin, Sulfa Drugs, Insulin",
     medicalHistory: "Hypertension, Diabetes (Type 2), Asthma,Hypertension, High Blood Pressure, Osteoporosis, Arthritis",
     medicalNote: "Patient requires regular kidney function tests and dietary modifications \n also........"
+  },
+  {
+    id: 4,
+    dateOfBirth: "1992/11/30",
+    age: 31,
+    primaryContact: "09xxxxxxxxx ( Brother )",
+    address: "789 Different St, Barangay Sto. Nino, Something City, Batangas",
+    pregnancyStatus: "N/A",
+    organDonor: false,
+    lastDiagnosis: "Depression",
+    diagnosisDate: "2026/03/10",
+    placeOfDiagnosis: "Batangas Medical Center",
+    allergies: "None",
+    medication: "Fluoxetine, Sertraline",
+    medicalHistory: "Anxiety, Depression",
+    medicalNote: "Patient needs regular mental health check-ups and therapy sessions."
+  },
+  {
+    id: 5,
+    dateOfBirth: "1985/07/20",
+    age: 38,
+    primaryContact: "09xxxxxxxxx ( Parent )",
+    address: "321 Last St, Barangay San Roque, Something City, Batangas",
+    pregnancyStatus: "N/A",
+    organDonor: true,
+    lastDiagnosis: "Coronary Artery Disease",
+    diagnosisDate: "2025/12/01",
+    placeOfDiagnosis: "San Roque Hospital",
+    allergies: "Shellfish, Dust, Pollen",
+    medication: "Aspirin, Atorvastatin, Morphine, Vicodin, Percocet, Penicillin",
+    medicalHistory: "Hypertension, High Blood Pressure, Diabetes (Type 2),Asthma",
+    medicalNote: "Patient should maintain a heart-healthy diet and exercise regularly."
   }
 ];
 
