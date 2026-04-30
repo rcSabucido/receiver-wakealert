@@ -138,6 +138,10 @@ export function LocationsPage() {
     activeTab === "Ongoing" ? !alert.isCompleted : alert.isCompleted
   );
 
+  const handleCardClick = (alert: AlertItem) => {
+    setSelectedAlertId(alert.id);
+  };
+
   const handleOpenModal = (alert: AlertItem) => {
     setSelectedPatient(alert);
     setIsModalOpen(true);
@@ -189,6 +193,7 @@ export function LocationsPage() {
                 ref={(el) => {
                   cardRefs.current[alert.id] = el;
                 }}
+                onClick={() => handleCardClick(alert)}
                 className={`bg-white rounded-xl p-4 transition-all duration-700 border-2 ${
                   isHighlighted
                     ? "border-[#3F8EFC] shadow-[0_0_15px_rgba(63,142,252,0.15)] ring-1 ring-[#3F8EFC]"
@@ -250,7 +255,10 @@ export function LocationsPage() {
 
                 {/* View Information Button */}
                 <button
-                  onClick={() => handleOpenModal(alert)}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleOpenModal(alert);
+                  }}
                   className="w-full cursor-pointer bg-[#D5FF9E] hover:bg-[#c2f080] text-black 
                              font-semibold py-1 rounded-lg text-sm shadow-sm transition-all active:scale-[0.98]"
                 >
@@ -266,7 +274,7 @@ export function LocationsPage() {
       <div className="relative flex items-center">
         <button
           onClick={() => setisCardCollapsed((prev) => !prev)}
-          className="absolute left-0 z-10 flex items-center justify-center
+          className="absolute left-0 z-9999 flex items-center justify-center
                      w-5 h-12 bg-gray-100 border border-gray-100 border-l-0
                      rounded-r-md shadow-md hover:bg-gray-200 transition-all cursor-pointer"
           title={isCardCollapsed ? "Expand panel" : "Collapse panel"}
