@@ -6,6 +6,7 @@ import { EllipsisVerticalIcon } from "@heroicons/react/16/solid";
 import { ArrowUpIcon } from "@heroicons/react/24/solid";
 import { ArrowDownIcon } from "@heroicons/react/24/solid";
 import { useNavigate } from "react-router-dom";
+import { MiniMap } from "../components/MiniMap";
 
 type ViewMode = "card" | "list";
 type StatusFilter = "all" | "ongoing" | "completed";
@@ -16,6 +17,8 @@ type AlertItem = {
   id: number;
   firstName: string;
   lastName: string;
+  latitude: string;
+  longitude: string;
   location: string;
   alertTime: string;
   isCompleted: boolean;
@@ -26,6 +29,8 @@ const alerts: AlertItem[] = [
     id: 1,
     firstName: "Juan",
     lastName: "Dela Cruz",
+    latitude: "7.0842",
+    longitude: "125.6234",
     location: "Blk 2, Lot 34,\nBarangay Sto. Nino, Something City,\nBatangas",
     alertTime: "2026-04-23 14:35",
     isCompleted: false,
@@ -34,6 +39,8 @@ const alerts: AlertItem[] = [
     id: 2,
     firstName: "Maria",
     lastName: "Santos",
+    latitude: "7.0512",
+    longitude: "125.5932",
     location: "Blk 10, Lot 11,\nBarangay San Pedro, Something City,\nLaguna",
     alertTime: "2026-04-23 09:18",
     isCompleted: true,
@@ -42,6 +49,8 @@ const alerts: AlertItem[] = [
     id: 3,
     firstName: "Pedro",
     lastName: "Reyes",
+    latitude: "7.1456",
+    longitude: "125.6789",
     location: "Blk 5, Lot 7,\nBarangay Mabini, Something City,\nQuezon",
     alertTime: "2026-04-22 22:47",
     isCompleted: false,
@@ -50,6 +59,8 @@ const alerts: AlertItem[] = [
     id: 4,
     firstName: "Ana",
     lastName: "Garcia",
+    latitude: "7.1234",
+    longitude: "125.6512",
     location: "Blk 3, Lot 15,\nBarangay San Roque, Something City,\nBatangas",
     alertTime: "2026-04-21 17:05",
     isCompleted: true,
@@ -58,6 +69,8 @@ const alerts: AlertItem[] = [
     id: 5,
     firstName: "Luis",
     lastName: "Martinez",
+    latitude: "6.9876",
+    longitude: "125.5678",
     location: "Blk 8, Lot 20,\nBarangay Santo Tomas, Something City,\nLaguna",
     alertTime: "2026-04-21 12:30",
     isCompleted: false,
@@ -65,6 +78,8 @@ const alerts: AlertItem[] = [
   { id: 6, 
     firstName: "Sofia", 
     lastName: "Lopez", 
+    latitude: "7.1089",
+    longitude: "125.6945",
     location: "Blk 6, Lot 12,\nBarangay San Isidro, Something City,\nQuezon", 
     alertTime: "2026-04-21 19:45", 
     isCompleted: true 
@@ -309,13 +324,10 @@ export function AlertsPage() {
                   <p className="text-xs font-semibold uppercase tracking-wide text-gray-500">Current Location:</p>
                   <p className="whitespace-pre-line text-sm leading-6 text-gray-700">{alert.location}</p>
                 </div>
-                <button
-                  type="button"
-                  onClick={() => {
-                    handleViewLocation(alert); 
-                  }}
-                  aria-label="Location placeholder"
-                  className="h-12 w-12 shrink-0 cursor-pointer rounded-md border border-gray-300 bg-gray-100"
+                <MiniMap
+                  latitude={alert.latitude}
+                  longitude={alert.longitude}
+                  onClick={() => handleViewLocation(alert)}                
                 />
               </div>
 
