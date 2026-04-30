@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import { useLocation } from "react-router-dom";
 import { ChevronLeftIcon, ChevronRightIcon } from "@heroicons/react/24/outline";
 import InformationModal from "../components/InformationModal";
+import { MapView } from "../components/MapView";
 
 type AlertItem = {
   id: number;
@@ -18,8 +19,8 @@ const initialAlerts: AlertItem[] = [
     id: 1,
     firstName: "Juan",
     lastName: "Dela Cruz",
-    latitude: "-25.8482763",
-    longitude: "32.5938118",
+    latitude: "7.0842",
+    longitude: "125.6234",
     alertTime: "2026-02-21 14:35",
     isCompleted: false,
   },
@@ -27,8 +28,8 @@ const initialAlerts: AlertItem[] = [
     id: 2,
     firstName: "Pedro",
     lastName: "Reyes",
-    latitude: "-25.8482763",
-    longitude: "32.5938118",
+    latitude: "7.1456",
+    longitude: "125.6789",
     alertTime: "2026-02-21 22:47",
     isCompleted: true,
   },
@@ -36,8 +37,8 @@ const initialAlerts: AlertItem[] = [
     id: 3,
     firstName: "Maria",
     lastName: "Santos",
-    latitude: "-25.8482763",
-    longitude: "32.5938118",
+    latitude: "7.0512",
+    longitude: "125.5932",
     alertTime: "2026-02-21 09:18",
     isCompleted: false,
   },
@@ -45,8 +46,8 @@ const initialAlerts: AlertItem[] = [
     id: 4,
     firstName: "Ana",
     lastName: "Garcia",
-    latitude: "-25.8482763",
-    longitude: "32.5938118",
+    latitude: "7.1234",
+    longitude: "125.6512",
     alertTime: "2026-02-21 17:05",
     isCompleted: true,
   },
@@ -54,8 +55,8 @@ const initialAlerts: AlertItem[] = [
     id: 5,
     firstName: "Luis",
     lastName: "Martinez",
-    latitude: "-25.8482763",
-    longitude: "32.5938118",
+    latitude: "6.9876",
+    longitude: "125.5678",
     alertTime: "2026-02-21 12:30",
     isCompleted: false,
   },
@@ -63,8 +64,8 @@ const initialAlerts: AlertItem[] = [
     id: 6,
     firstName: "Sofia",
     lastName: "Lopez",
-    latitude: "-25.8482763",
-    longitude: "32.5938118",
+    latitude: "7.1089",
+    longitude: "125.6945",
     alertTime: "2026-02-21 19:45",
     isCompleted: true,
   },
@@ -278,13 +279,13 @@ export function LocationsPage() {
         </button>
       </div>
 
-      {/* Map View Placeholder */}
-      <div className="flex-1 bg-gray-100 relative">
-        <div className="absolute inset-5 bg-gray-100 flex items-center justify-center opacity-40">
-          <p className="text-gray-400 font-black italic tracking-widest uppercase">
-            [ Map Component Placeholder ]
-          </p>
-        </div>
+
+      <div className="flex-1 relative">
+        <MapView 
+          alerts={filteredAlerts}
+          focusedId={selectedAlertId}
+          onMarkerClick={(alert) => handleOpenModal(alert)}
+        />
       </div>
 
       {/* Modal Component */}

@@ -137,7 +137,7 @@ const InformationModal = ({ isOpen, onClose, userData }: InformationModalProps) 
   const patientDetails = info.find((item) => item.id === userData?.id);
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 p-4">
+    <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/30 p-4">
       <div className="relative w-full max-w-6xl max-h-[90vh] overflow-y-auto no-scrollbar 
                       rounded-2xl bg-[#E5E5E5] p-8 shadow-[0_20px_50px_rgba(0,0,0,0.3)] border border-white/20">
         {/* Header */}
