@@ -6,6 +6,7 @@ import { EllipsisVerticalIcon } from "@heroicons/react/16/solid";
 import { ArrowUpIcon } from "@heroicons/react/24/solid";
 import { ArrowDownIcon } from "@heroicons/react/24/solid";
 import { useNavigate } from "react-router-dom";
+import { MiniMap } from "../components/MiniMap";
 
 type ViewMode = "card" | "list";
 type StatusFilter = "all" | "ongoing" | "completed";
@@ -323,13 +324,10 @@ export function AlertsPage() {
                   <p className="text-xs font-semibold uppercase tracking-wide text-gray-500">Current Location:</p>
                   <p className="whitespace-pre-line text-sm leading-6 text-gray-700">{alert.location}</p>
                 </div>
-                <button
-                  type="button"
-                  onClick={() => {
-                    handleViewLocation(alert); 
-                  }}
-                  aria-label="Location placeholder"
-                  className="h-12 w-12 shrink-0 cursor-pointer rounded-md border border-gray-300 bg-gray-100"
+                <MiniMap
+                  latitude={alert.latitude}
+                  longitude={alert.longitude}
+                  onClick={() => handleViewLocation(alert)}                
                 />
               </div>
 

@@ -1,9 +1,7 @@
-// src/lib/osmTile.ts
-
 export function getOsmTileUrl(
   latitude: string,
   longitude: string,
-  zoom: number = 14
+  zoom: number = 11
 ): string {
   const lat = parseFloat(latitude);
   const lng = parseFloat(longitude);
