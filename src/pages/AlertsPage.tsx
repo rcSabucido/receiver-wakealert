@@ -491,6 +491,7 @@ export function AlertsPage() {
                 <button
                   type="button"
                   onClick={() => {
+                    handleViewLocation(menuAlert);
                     setOpenOptionsMenu(null);
                   }}
                   className="block w-full cursor-pointer rounded-md px-3 py-2 text-left text-sm text-gray-800 transition-colors hover:bg-gray-100"
