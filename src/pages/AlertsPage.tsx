@@ -5,6 +5,7 @@ import InformationModal from "../components/InformationModal";
 import { EllipsisVerticalIcon } from "@heroicons/react/16/solid";
 import { ArrowUpIcon } from "@heroicons/react/24/solid";
 import { ArrowDownIcon } from "@heroicons/react/24/solid";
+import { useNavigate } from "react-router-dom";
 
 type ViewMode = "card" | "list";
 type StatusFilter = "all" | "ongoing" | "completed";
@@ -45,6 +46,29 @@ const alerts: AlertItem[] = [
     alertTime: "2026-04-22 22:47",
     isCompleted: false,
   },
+  {
+    id: 4,
+    firstName: "Ana",
+    lastName: "Garcia",
+    location: "Blk 3, Lot 15,\nBarangay San Roque, Something City,\nBatangas",
+    alertTime: "2026-04-21 17:05",
+    isCompleted: true,
+  },
+  {
+    id: 5,
+    firstName: "Luis",
+    lastName: "Martinez",
+    location: "Blk 8, Lot 20,\nBarangay Santo Tomas, Something City,\nLaguna",
+    alertTime: "2026-04-21 12:30",
+    isCompleted: false,
+  },
+  { id: 6, 
+    firstName: "Sofia", 
+    lastName: "Lopez", 
+    location: "Blk 6, Lot 12,\nBarangay San Isidro, Something City,\nQuezon", 
+    alertTime: "2026-04-21 19:45", 
+    isCompleted: true 
+  }
 ];
 
 export function AlertsPage() {
@@ -72,6 +96,10 @@ export function AlertsPage() {
     Object.fromEntries(alerts.map((alert) => [alert.id, alert.isCompleted]))
   );
 
+  const navigate = useNavigate(); 
+  const handleViewLocation = (alert: AlertItem) => {
+  navigate("/locations", { state: { userData: alert } });
+};
   
   const toggleAlertStatus = (alertId: number) => {
     setAlertStatuses((prev) => ({
@@ -283,6 +311,9 @@ export function AlertsPage() {
                 </div>
                 <button
                   type="button"
+                  onClick={() => {
+                    handleViewLocation(alert); 
+                  }}
                   aria-label="Location placeholder"
                   className="h-12 w-12 shrink-0 cursor-pointer rounded-md border border-gray-300 bg-gray-100"
                 />
@@ -460,6 +491,7 @@ export function AlertsPage() {
                 <button
                   type="button"
                   onClick={() => {
+                    handleViewLocation(menuAlert);
                     setOpenOptionsMenu(null);
                   }}
                   className="block w-full cursor-pointer rounded-md px-3 py-2 text-left text-sm text-gray-800 transition-colors hover:bg-gray-100"
