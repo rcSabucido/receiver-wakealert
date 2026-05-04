@@ -16,14 +16,33 @@ export type LoginResponse = {
 };
 
 export type AlertItem = {
-  id: number;
+  AlertID: number;
+  Latitude: string;
+  Longitude: string;
+  AlertTime: string;
+  VictimID: number;
+  isCompleted: boolean;
+  isDeleted: boolean;
+};
+
+export type VictimDetails = {
+  victimId: number;
   firstName: string;
   lastName: string;
-  latitude: string;
-  longitude: string;
-  location: string;
-  alertTime: string;
-  isCompleted: boolean;
+  fullName: string;
+  birthDate: string;
+  age: number;
+  primaryContact: string;
+  address: string;
+  pregnancyStatus: string;
+  organDonor: string;
+  lastDiagnosis: string;
+  diagnosisDate: string;
+  placeOfDiagnosis: string;
+  allergies: string;
+  medication: string;
+  medicalHistory: string;
+  medicalNote: string;
 };
 
 class AlertAPI {
@@ -65,24 +84,58 @@ class AlertAPI {
       headers: this.getHeaders(),
     });
     if (!response.ok) throw new Error('Failed to fetch alerts');
-    return response.json();
+    const data = await response.json();
+    return (data as Array<Record<string, unknown>>).map((alert) => ({
+      AlertID: alert.AlertID as number,
+      Latitude: alert.Latitude as string,
+      Longitude: alert.Longitude as string,
+      AlertTime: alert.AlertTime as string,
+      VictimID: alert.VictimID as number,
+      isCompleted: (alert.isCompleted ?? alert.IsCompleted) as boolean,
+      isDeleted: (alert.isDeleted ?? alert.IsDeleted) as boolean,
+    }));
   }
 
   async getAlert(id: number): Promise<AlertItem> {
-    const response = await fetch(`${this.baseUrl}/alert/${id}`, {
+    const response = await fetch(`${this.baseUrl}/alerts/${id}`, {
       headers: this.getHeaders(),
     });
     if (!response.ok) throw new Error('Failed to fetch alert');
-    return response.json();
+    const alert = (await response.json()) as Record<string, unknown>;
+    return {
+      AlertID: alert.AlertID as number,
+      Latitude: alert.Latitude as string,
+      Longitude: alert.Longitude as string,
+      AlertTime: alert.AlertTime as string,
+      VictimID: alert.VictimID as number,
+      isCompleted: (alert.isCompleted ?? alert.IsCompleted) as boolean,
+      isDeleted: (alert.isDeleted ?? alert.IsDeleted) as boolean,
+    };
   }
 
   async updateAlert(id: number, data: Partial<AlertItem>): Promise<AlertItem> {
-    const response = await fetch(`${this.baseUrl}/alert/${id}`, {
+    const response = await fetch(`${this.baseUrl}/alerts/${id}`, {
       method: 'PUT',
       headers: this.getHeaders(),
       body: JSON.stringify(data),
     });
     if (!response.ok) throw new Error('Failed to update alert');
+    return response.json();
+  }
+
+  async getVictims(): Promise<unknown[]> {
+    const response = await fetch(`${this.baseUrl}/victims`, {
+      headers: this.getHeaders(),
+    });
+    if (!response.ok) throw new Error('Failed to fetch victims');
+    return response.json();
+  }
+
+  async getVictimDetails(id: number): Promise<VictimDetails> {
+    const response = await fetch(`${this.baseUrl}/victims/${id}`, {
+      headers: this.getHeaders(),
+    });
+    if (!response.ok) throw new Error('Failed to fetch victim details');
     return response.json();
   }
 }

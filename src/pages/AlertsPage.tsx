@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { ViewModeToggle } from "../components/ViewModeToggle";
 import { FunnelIcon, TrashIcon } from "@heroicons/react/24/outline";
 import InformationModal from "../components/InformationModal";
@@ -7,97 +7,36 @@ import { ArrowUpIcon } from "@heroicons/react/24/solid";
 import { ArrowDownIcon } from "@heroicons/react/24/solid";
 import { useNavigate } from "react-router-dom";
 import { MiniMap } from "../components/MiniMap";
+import { alertAPI, type AlertItem, type VictimDetails } from "../lib/api";
 
 type ViewMode = "card" | "list";
 type StatusFilter = "all" | "ongoing" | "completed";
-type SortField = "id" | "name" | "alertTime" | "location" | "status";
+type SortField = "id" | "victimId" | "alertTime" | "location" | "status";
 type SortDirection = "asc" | "desc";
 
-type AlertItem = {
-  id: number;
-  firstName: string;
-  lastName: string;
-  latitude: string;
-  longitude: string;
-  location: string;
-  alertTime: string;
-  isCompleted: boolean;
-};
-
-const alerts: AlertItem[] = [
-  {
-    id: 1,
-    firstName: "Juan",
-    lastName: "Dela Cruz",
-    latitude: "7.0842",
-    longitude: "125.6234",
-    location: "Blk 2, Lot 34,\nBarangay Sto. Nino, Something City,\nBatangas",
-    alertTime: "2026-04-23 14:35",
-    isCompleted: false,
-  },
-  {
-    id: 2,
-    firstName: "Maria",
-    lastName: "Santos",
-    latitude: "7.0512",
-    longitude: "125.5932",
-    location: "Blk 10, Lot 11,\nBarangay San Pedro, Something City,\nLaguna",
-    alertTime: "2026-04-23 09:18",
-    isCompleted: true,
-  },
-  {
-    id: 3,
-    firstName: "Pedro",
-    lastName: "Reyes",
-    latitude: "7.1456",
-    longitude: "125.6789",
-    location: "Blk 5, Lot 7,\nBarangay Mabini, Something City,\nQuezon",
-    alertTime: "2026-04-22 22:47",
-    isCompleted: false,
-  },
-  {
-    id: 4,
-    firstName: "Ana",
-    lastName: "Garcia",
-    latitude: "7.1234",
-    longitude: "125.6512",
-    location: "Blk 3, Lot 15,\nBarangay San Roque, Something City,\nBatangas",
-    alertTime: "2026-04-21 17:05",
-    isCompleted: true,
-  },
-  {
-    id: 5,
-    firstName: "Luis",
-    lastName: "Martinez",
-    latitude: "6.9876",
-    longitude: "125.5678",
-    location: "Blk 8, Lot 20,\nBarangay Santo Tomas, Something City,\nLaguna",
-    alertTime: "2026-04-21 12:30",
-    isCompleted: false,
-  },
-  { id: 6, 
-    firstName: "Sofia", 
-    lastName: "Lopez", 
-    latitude: "7.1089",
-    longitude: "125.6945",
-    location: "Blk 6, Lot 12,\nBarangay San Isidro, Something City,\nQuezon", 
-    alertTime: "2026-04-21 19:45", 
-    isCompleted: true 
-  }
-];
-
 export function AlertsPage() {
-  const [alertsData, setAlertsData] = useState<AlertItem[]>(alerts);
+  const [alertsData, setAlertsData] = useState<AlertItem[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [geocodedAddresses, setGeocodedAddresses] = useState<
+    Record<string, string>
+  >({});
+  const geocodedRef = useRef<Record<string, string>>({});
   const [viewMode, setViewMode] = useState<ViewMode>("card");
   const [selectedAlert, setSelectedAlert] = useState<AlertItem | null>(null);
   const [isInfoModalOpen, setIsInfoModalOpen] = useState(false);
+  const [victimDetailsById, setVictimDetailsById] = useState<
+    Record<number, VictimDetails>
+  >({});
   const [appliedFilter, setAppliedFilter] = useState<StatusFilter>("all");
   const [draftFilter, setDraftFilter] = useState<StatusFilter>("all");
   const [filterPopoverPosition, setFilterPopoverPosition] = useState<{
     top: number;
     left: number;
   } | null>(null);
-  const [pendingDeleteAlertId, setPendingDeleteAlertId] = useState<number | null>(null);
+  const [pendingDeleteAlertId, setPendingDeleteAlertId] = useState<
+    number | null
+  >(null);
   const [openOptionsMenu, setOpenOptionsMenu] = useState<{
     alertId: number;
     top: number;
@@ -108,23 +47,160 @@ export function AlertsPage() {
     direction: SortDirection;
   } | null>(null);
   const [alertStatuses, setAlertStatuses] = useState<Record<number, boolean>>(
-    Object.fromEntries(alerts.map((alert) => [alert.id, alert.isCompleted]))
+    {}
   );
 
-  const navigate = useNavigate(); 
+  const navigate = useNavigate();
   const handleViewLocation = (alert: AlertItem) => {
-  navigate("/locations", { state: { userData: alert } });
-};
-  
+    navigate("/locations", { state: { userData: alert } });
+  };
+
+  useEffect(() => {
+    const fetchAlerts = async () => {
+      try {
+        setIsLoading(true);
+        const data = await alertAPI.getAlerts();
+        const active = data.filter((a) => !a.isDeleted);
+        setAlertsData(active);
+        setAlertStatuses(
+          Object.fromEntries(active.map((a) => [a.AlertID, a.isCompleted]))
+        );
+        setError(null);
+      } catch (err) {
+        setError(
+          err instanceof Error ? err.message : "Failed to fetch alerts"
+        );
+        setAlertsData([]);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchAlerts();
+  }, []);
+
+  useEffect(() => {
+    if (alertsData.length === 0) return;
+
+    const missingIds = Array.from(
+      new Set(alertsData.map((alert) => alert.VictimID))
+    ).filter((id) => !victimDetailsById[id]);
+
+    if (missingIds.length === 0) return;
+
+    let cancelled = false;
+
+    const fetchVictimDetails = async () => {
+      const results = await Promise.all(
+        missingIds.map(async (id) => {
+          try {
+            const details = await alertAPI.getVictimDetails(id);
+            return { id, details };
+          } catch {
+            return { id, details: null };
+          }
+        })
+      );
+
+      if (cancelled) return;
+
+      setVictimDetailsById((prev) => {
+        const next = { ...prev };
+        results.forEach((result) => {
+          if (result.details) {
+            next[result.id] = result.details;
+          }
+        });
+        return next;
+      });
+    };
+
+    fetchVictimDetails();
+    return () => {
+      cancelled = true;
+    };
+  }, [alertsData, victimDetailsById]);
+
+  useEffect(() => {
+    if (alertsData.length === 0) return;
+
+    const coordsToFetch = [
+      ...new Set(alertsData.map((a) => `${a.Latitude},${a.Longitude}`)),
+    ].filter((coord) => !geocodedRef.current[coord]);
+
+    if (coordsToFetch.length === 0) return;
+
+    let cancelled = false;
+
+    const geocodeAll = async () => {
+      for (let i = 0; i < coordsToFetch.length; i++) {
+        if (cancelled) break;
+
+        const coord = coordsToFetch[i];
+        const [lat, lon] = coord.split(",");
+
+        try {
+          const res = await fetch(
+            `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}`,
+            { headers: { "Accept-Language": "en" } }
+          );
+          const json = await res.json();
+          const address =
+            (json.display_name as string | undefined) ?? `${lat}, ${lon}`;
+          geocodedRef.current[coord] = address;
+          if (!cancelled) {
+            setGeocodedAddresses((prev) => ({ ...prev, [coord]: address }));
+          }
+        } catch {
+          const fallback = `${lat}, ${lon}`;
+          geocodedRef.current[coord] = fallback;
+          if (!cancelled) {
+            setGeocodedAddresses((prev) => ({ ...prev, [coord]: fallback }));
+          }
+        }
+
+        if (!cancelled && i < coordsToFetch.length - 1) {
+          await new Promise((r) => setTimeout(r, 1100));
+        }
+      }
+    };
+
+    geocodeAll();
+    return () => {
+      cancelled = true;
+    };
+  }, [alertsData]);
+
+  const getAddress = (alert: AlertItem): string => {
+    const key = `${alert.Latitude},${alert.Longitude}`;
+    return geocodedAddresses[key] ?? `${alert.Latitude}, ${alert.Longitude}`;
+  };
+
+  const getVictimName = (alert: AlertItem): string => {
+    const details = victimDetailsById[alert.VictimID];
+    if (details?.fullName) return details.fullName;
+    return `Victim #${alert.VictimID}`;
+  };
+
+  const formatAlertTime = (value: string): string => {
+    if (!value) return "";
+    const normalized = value.includes("T") ? value : value.replace(" ", "T");
+    const date = new Date(normalized);
+    if (Number.isNaN(date.getTime())) return value;
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, "0");
+    const day = String(date.getDate()).padStart(2, "0");
+    const hours = String(date.getHours()).padStart(2, "0");
+    const minutes = String(date.getMinutes()).padStart(2, "0");
+    return `${year}-${month}-${day} ${hours}:${minutes}`;
+  };
+
   const toggleAlertStatus = (alertId: number) => {
-    setAlertStatuses((prev) => ({
-      ...prev,
-      [alertId]: !prev[alertId],
-    }));
+    setAlertStatuses((prev) => ({ ...prev, [alertId]: !prev[alertId] }));
   };
 
   const deleteAlert = (alertId: number) => {
-    setAlertsData((prev) => prev.filter((alert) => alert.id !== alertId));
+    setAlertsData((prev) => prev.filter((a) => a.AlertID !== alertId));
     setOpenOptionsMenu((prev) => (prev?.alertId === alertId ? null : prev));
     setAlertStatuses((prev) => {
       const next = { ...prev };
@@ -134,54 +210,30 @@ export function AlertsPage() {
   };
 
   const toggleOptionsMenu = (alertId: number, anchor: HTMLButtonElement) => {
-    const anchorRect = anchor.getBoundingClientRect();
-
+    const rect = anchor.getBoundingClientRect();
     setOpenOptionsMenu((prev) =>
       prev?.alertId === alertId
         ? null
-        : {
-            alertId,
-            top: anchorRect.bottom + 6,
-            left: anchorRect.right,
-          }
+        : { alertId, top: rect.bottom + 6, left: rect.right }
     );
   };
 
-  const openDeleteConfirmation = (alertId: number) => {
+  const openDeleteConfirmation = (alertId: number) =>
     setPendingDeleteAlertId(alertId);
-  };
-
-  const cancelDelete = () => {
-    setPendingDeleteAlertId(null);
-  };
-
+  const cancelDelete = () => setPendingDeleteAlertId(null);
   const confirmDelete = () => {
-    if (pendingDeleteAlertId === null) {
-      return;
-    }
-
+    if (pendingDeleteAlertId === null) return;
     deleteAlert(pendingDeleteAlertId);
     setPendingDeleteAlertId(null);
   };
 
   const openFilterPopover = (anchor: HTMLButtonElement) => {
-    const anchorRect = anchor.getBoundingClientRect();
-
+    const rect = anchor.getBoundingClientRect();
     setDraftFilter(appliedFilter);
-    setFilterPopoverPosition({
-      top: anchorRect.bottom + 6,
-      left: anchorRect.right,
-    });
+    setFilterPopoverPosition({ top: rect.bottom + 6, left: rect.right });
   };
-
-  const clearFilter = () => {
-    setDraftFilter("all");
-  };
-
-  const cancelFilter = () => {
-    setFilterPopoverPosition(null);
-  };
-
+  const clearFilter = () => setDraftFilter("all");
+  const cancelFilter = () => setFilterPopoverPosition(null);
   const applyFilter = () => {
     setAppliedFilter(draftFilter);
     setFilterPopoverPosition(null);
@@ -189,93 +241,14 @@ export function AlertsPage() {
 
   const toggleSort = (field: SortField) => {
     setSortConfig((prev) => {
-      if (prev === null || prev.field !== field) {
+      if (prev === null || prev.field !== field)
         return { field, direction: "asc" };
-      }
-
-      return {
-        field,
-        direction: prev.direction === "asc" ? "desc" : "asc",
-      };
+      return { field, direction: prev.direction === "asc" ? "desc" : "asc" };
     });
   };
 
-  const filteredAlerts = alertsData.filter((alert) => {
-    const isCompleted = alertStatuses[alert.id] ?? alert.isCompleted;
-
-    if (appliedFilter === "completed") {
-      return isCompleted;
-    }
-    if (appliedFilter === "ongoing") {
-      return !isCompleted;
-    }
-    return true;
-  });
-
-  const cardAlerts =
-    appliedFilter === "all"
-      ? [...filteredAlerts].sort((a, b) => {
-          const aCompleted = alertStatuses[a.id] ?? a.isCompleted;
-          const bCompleted = alertStatuses[b.id] ?? b.isCompleted;
-
-          if (aCompleted === bCompleted) {
-            return 0;
-          }
-          return aCompleted ? 1 : -1;
-        })
-      : filteredAlerts;
-
-  const pendingDeleteAlert =
-    pendingDeleteAlertId === null ? null : alertsData.find((alert) => alert.id === pendingDeleteAlertId);
-  const menuAlert =
-    openOptionsMenu === null ? null : alertsData.find((alert) => alert.id === openOptionsMenu.alertId) ?? null;
-  const menuAlertIsCompleted =
-    menuAlert === null ? false : (alertStatuses[menuAlert.id] ?? menuAlert.isCompleted);
-
-  const formatLocationOneLine = (location: string) =>
-    location
-      .split("\n")
-      .map((part) => part.trim().replace(/,+$/g, ""))
-      .filter(Boolean)
-      .join(", ");
-
-  const listAlerts =
-    sortConfig === null
-      ? filteredAlerts
-      : [...filteredAlerts].sort((a, b) => {
-          const aCompleted = alertStatuses[a.id] ?? a.isCompleted;
-          const bCompleted = alertStatuses[b.id] ?? b.isCompleted;
-
-          let compareValue = 0;
-
-          if (sortConfig.field === "id") {
-            compareValue = a.id - b.id;
-          }
-
-          if (sortConfig.field === "name") {
-            compareValue = `${a.firstName} ${a.lastName}`.localeCompare(`${b.firstName} ${b.lastName}`);
-          }
-
-          if (sortConfig.field === "alertTime") {
-            compareValue = a.alertTime.localeCompare(b.alertTime);
-          }
-
-          if (sortConfig.field === "location") {
-            compareValue = formatLocationOneLine(a.location).localeCompare(formatLocationOneLine(b.location));
-          }
-
-          if (sortConfig.field === "status") {
-            compareValue = Number(aCompleted) - Number(bCompleted);
-          }
-
-          return sortConfig.direction === "asc" ? compareValue : -compareValue;
-        });
-
   const getSortIcon = (field: SortField) => {
-    if (sortConfig?.field !== field) {
-      return null;
-    }
-
+    if (sortConfig?.field !== field) return null;
     return sortConfig.direction === "asc" ? (
       <ArrowUpIcon className="h-3 w-3" />
     ) : (
@@ -283,13 +256,67 @@ export function AlertsPage() {
     );
   };
 
+  const filteredAlerts = alertsData.filter((alert) => {
+    const isCompleted = alertStatuses[alert.AlertID] ?? alert.isCompleted;
+    if (appliedFilter === "completed") return isCompleted;
+    if (appliedFilter === "ongoing") return !isCompleted;
+    return true;
+  });
+
+  const cardAlerts =
+    appliedFilter === "all"
+      ? [...filteredAlerts].sort((a, b) => {
+          const aC = alertStatuses[a.AlertID] ?? a.isCompleted;
+          const bC = alertStatuses[b.AlertID] ?? b.isCompleted;
+          if (aC === bC) return 0;
+          return aC ? 1 : -1;
+        })
+      : filteredAlerts;
+
+  const listAlerts =
+    sortConfig === null
+      ? filteredAlerts
+      : [...filteredAlerts].sort((a, b) => {
+          const aC = alertStatuses[a.AlertID] ?? a.isCompleted;
+          const bC = alertStatuses[b.AlertID] ?? b.isCompleted;
+          let v = 0;
+          if (sortConfig.field === "id") v = a.AlertID - b.AlertID;
+          if (sortConfig.field === "victimId")
+            v = a.VictimID - b.VictimID;
+          if (sortConfig.field === "alertTime")
+            v = a.AlertTime.localeCompare(b.AlertTime);
+          if (sortConfig.field === "location")
+            v = getAddress(a).localeCompare(getAddress(b));
+          if (sortConfig.field === "status") v = Number(aC) - Number(bC);
+          return sortConfig.direction === "asc" ? v : -v;
+        });
+
+  const pendingDeleteAlert =
+    pendingDeleteAlertId === null
+      ? null
+      : alertsData.find((a) => a.AlertID === pendingDeleteAlertId);
+
+  const menuAlert =
+    openOptionsMenu === null
+      ? null
+      : (alertsData.find((a) => a.AlertID === openOptionsMenu.alertId) ?? null);
+
+  const menuAlertIsCompleted =
+    menuAlert === null
+      ? false
+      : (alertStatuses[menuAlert.AlertID] ?? menuAlert.isCompleted);
+
+  if (isLoading) return <div className="flex-1 p-8">Loading alerts...</div>;
+  if (error)
+    return <div className="flex-1 p-8 text-red-800">Error: {error}</div>;
+
   return (
     <div className="flex-1 min-h-full bg-[#E5E5E5] p-8">
       <div className="mb-6 flex items-center justify-between gap-4">
         <ViewModeToggle value={viewMode} onChange={setViewMode} />
         <button
           type="button"
-          onClick={(event) => openFilterPopover(event.currentTarget)}
+          onClick={(e) => openFilterPopover(e.currentTarget)}
           aria-label="Open filter"
           className="flex h-11 w-11 cursor-pointer items-center justify-center rounded-lg bg-[#D5FF9E] text-black transition-colors hover:bg-[#BEEA7A]"
         >
@@ -300,76 +327,91 @@ export function AlertsPage() {
       {viewMode === "card" ? (
         <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
           {cardAlerts.map((alert, index) => {
-            const isCompleted = alertStatuses[alert.id] ?? alert.isCompleted;
+            const isCompleted =
+              alertStatuses[alert.AlertID] ?? alert.isCompleted;
+            const address = getAddress(alert);
 
             return (
-            <article key={`${alert.id}-${index}`} className="flex flex-col gap-4 rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
-              <div className="flex items-center justify-between border-b border-gray-200 pb-3">
-                <p className="text-sm font-semibold text-gray-900">#{alert.id}</p>
-                <button
-                  type="button"
-                  onClick={() => toggleAlertStatus(alert.id)}
-                  className={`cursor-pointer rounded-md px-3 py-1 text-xs font-semibold transition-colors duration-200 ${
-                    isCompleted
-                      ? "bg-green-100 text-green-700 hover:bg-green-200"
-                      : "bg-red-100 text-red-700 hover:bg-red-200"
-                  }`}
-                >
-                  {isCompleted ? "Completed" : "Ongoing"}
-                </button>
-              </div>
-
-              <div className="flex items-start justify-between gap-4 border-b border-gray-200 pb-3">
-                <div>
-                  <p className="text-xs font-semibold uppercase tracking-wide text-gray-500">Current Location:</p>
-                  <p className="whitespace-pre-line text-sm leading-6 text-gray-700">{alert.location}</p>
-                </div>
-                <MiniMap
-                  latitude={alert.latitude}
-                  longitude={alert.longitude}
-                  onClick={() => handleViewLocation(alert)}                
-                />
-              </div>
-
-              <div className="flex items-start justify-between gap-4">
-                <div>
-                  <p className="text-xs font-semibold uppercase tracking-wide text-gray-500">Name:</p>
-                  <p className="font-semibold text-gray-900">
-                    {alert.firstName} {alert.lastName}
+              <article
+                key={`${alert.AlertID}-${index}`}
+                className="flex flex-col gap-4 rounded-xl border border-gray-200 bg-white p-5 shadow-sm"
+              >
+                <div className="flex items-center justify-between border-b border-gray-200 pb-3">
+                  <p className="text-sm font-semibold text-gray-900">
+                    #{alert.AlertID}
                   </p>
-                </div>
-                <div className="text-right">
-                  <p className="text-xs font-semibold uppercase tracking-wide text-gray-500">Alert Time:</p>
-                  <p className="text-sm text-gray-600">{alert.alertTime}</p>
-                </div>
-              </div>
-
-              <div className="mt-1 flex items-center justify-between gap-1">
-                <button
-                  type="button"
-                  onClick={() => {
-                    setSelectedAlert(alert);
-                    setIsInfoModalOpen(true);
-                  }}
-                  className={`flex h-10 items-center justify-center cursor-pointer rounded-lg 
-                    bg-[#D5FF9E] px-4 text-sm font-semibold hover:bg-[#BEEA7A] ${
-                    isCompleted ? "flex-1" : "w-full"
-                  }`}
-                >
-                  View Information
-                </button>
-                {isCompleted && (
                   <button
                     type="button"
-                    onClick={() => openDeleteConfirmation(alert.id)}
-                    aria-label={`Delete alert ${alert.id}`}
-                    className="flex h-10 w-10 cursor-pointer items-center justify-center rounded-md bg-red-100 text-red-700 transition-colors hover:bg-red-200"
+                    onClick={() => toggleAlertStatus(alert.AlertID)}
+                    className={`cursor-pointer rounded-md px-3 py-1 text-xs font-semibold transition-colors duration-200 ${
+                      isCompleted
+                        ? "bg-green-100 text-green-700 hover:bg-green-200"
+                        : "bg-red-100 text-red-700 hover:bg-red-200"
+                    }`}
                   >
-                    <TrashIcon className="h-5 w-5" />
+                    {isCompleted ? "Completed" : "Ongoing"}
                   </button>
-                )}
-              </div>
-            </article>
+                </div>
+
+                <div className="flex items-start justify-between gap-4 border-b border-gray-200 pb-3">
+                  <div className="min-w-0">
+                    <p className="text-xs font-semibold uppercase tracking-wide text-gray-500">
+                      Current Location:
+                    </p>
+                    {/* swap this out so that cards wont show until address finishes loading */}
+                    <p className="text-sm leading-6 text-gray-700">{address}</p>
+                  </div>
+                  <MiniMap
+                    latitude={alert.Latitude}
+                    longitude={alert.Longitude}
+                    onClick={() => handleViewLocation(alert)}
+                  />
+                </div>
+
+                <div className="flex items-start justify-between gap-4">
+                  <div>
+                    <p className="text-xs font-semibold uppercase tracking-wide text-gray-500">
+                      Name:
+                    </p>
+                    <p className="font-semibold text-gray-900">
+                      {getVictimName(alert)}
+                    </p>
+                  </div>
+                  <div className="text-right">
+                    <p className="text-xs font-semibold uppercase tracking-wide text-gray-500">
+                      Alert Time:
+                    </p>
+                    <p className="text-sm text-gray-600">
+                      {formatAlertTime(alert.AlertTime)}
+                    </p>
+                  </div>
+                </div>
+
+                <div className="mt-1 flex items-center justify-between gap-1">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setSelectedAlert(alert);
+                      setIsInfoModalOpen(true);
+                    }}
+                    className={`flex h-10 items-center justify-center cursor-pointer rounded-lg bg-[#D5FF9E] px-4 text-sm font-semibold hover:bg-[#BEEA7A] ${
+                      isCompleted ? "flex-1" : "w-full"
+                    }`}
+                  >
+                    View Information
+                  </button>
+                  {isCompleted && (
+                    <button
+                      type="button"
+                      onClick={() => openDeleteConfirmation(alert.AlertID)}
+                      aria-label={`Delete alert ${alert.AlertID}`}
+                      className="flex h-10 w-10 cursor-pointer items-center justify-center rounded-md bg-red-100 text-red-700 transition-colors hover:bg-red-200"
+                    >
+                      <TrashIcon className="h-5 w-5" />
+                    </button>
+                  )}
+                </div>
+              </article>
             );
           })}
         </div>
@@ -379,56 +421,30 @@ export function AlertsPage() {
             <table className="min-w-full divide-y divide-gray-200">
               <thead className="bg-gray-50">
                 <tr>
-                  <th scope="col" className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-600">
-                    <button
-                      type="button"
-                      onClick={() => toggleSort("id")}
-                      className="inline-flex cursor-pointer items-center gap-1 hover:text-gray-900"
+                  {(
+                    [
+                      { label: "Alert ID", field: "id" },
+                      { label: "Victim ID", field: "victimId" },
+                      { label: "Alert Time", field: "alertTime" },
+                      { label: "Location", field: "location" },
+                      { label: "Status", field: "status" },
+                    ] as { label: string; field: SortField }[]
+                  ).map(({ label, field }) => (
+                    <th
+                      key={field}
+                      scope="col"
+                      className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-600"
                     >
-                      Victim ID
-                      {getSortIcon("id")}
-                    </button>
-                  </th>
-                  <th scope="col" className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-600">
-                    <button
-                      type="button"
-                      onClick={() => toggleSort("name")}
-                      className="inline-flex cursor-pointer items-center gap-1 hover:text-gray-900"
-                    >
-                      Name
-                      {getSortIcon("name")}
-                    </button>
-                  </th>
-                  <th scope="col" className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-600">
-                    <button
-                      type="button"
-                      onClick={() => toggleSort("alertTime")}
-                      className="inline-flex cursor-pointer items-center gap-1 hover:text-gray-900"
-                    >
-                      Alert Time
-                      {getSortIcon("alertTime")}
-                    </button>
-                  </th>
-                  <th scope="col" className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-600">
-                    <button
-                      type="button"
-                      onClick={() => toggleSort("location")}
-                      className="inline-flex cursor-pointer items-center gap-1 hover:text-gray-900"
-                    >
-                      Location
-                      {getSortIcon("location")}
-                    </button>
-                  </th>
-                  <th scope="col" className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-600">
-                    <button
-                      type="button"
-                      onClick={() => toggleSort("status")}
-                      className="inline-flex cursor-pointer items-center gap-1 hover:text-gray-900"
-                    >
-                      Status
-                      {getSortIcon("status")}
-                    </button>
-                  </th>
+                      <button
+                        type="button"
+                        onClick={() => toggleSort(field)}
+                        className="inline-flex cursor-pointer items-center gap-1 hover:text-gray-900"
+                      >
+                        {label}
+                        {getSortIcon(field)}
+                      </button>
+                    </th>
+                  ))}
                   <th scope="col" className="px-4 py-3 text-right">
                     <span className="sr-only">Actions</span>
                   </th>
@@ -436,18 +452,26 @@ export function AlertsPage() {
               </thead>
               <tbody className="divide-y divide-gray-200 bg-white">
                 {listAlerts.map((alert, index) => {
-                  const isCompleted = alertStatuses[alert.id] ?? alert.isCompleted;
+                  const isCompleted =
+                    alertStatuses[alert.AlertID] ?? alert.isCompleted;
 
                   return (
-                    <tr key={`${alert.id}-${index}`}>
-                      <td className="whitespace-nowrap px-4 py-3 text-sm text-gray-900">#{alert.id}</td>
-                      <td className="whitespace-nowrap px-4 py-3 text-sm text-gray-800">
-                        {alert.firstName} {alert.lastName}
+                    <tr key={`${alert.AlertID}-${index}`}>
+                      <td className="whitespace-nowrap px-4 py-3 text-sm text-gray-900">
+                        #{alert.AlertID}
                       </td>
-                      <td className="whitespace-nowrap px-4 py-3 text-sm text-gray-700">{alert.alertTime}</td>
+                      <td className="whitespace-nowrap px-4 py-3 text-sm text-gray-800">
+                        {alert.VictimID}
+                      </td>
+                      <td className="whitespace-nowrap px-4 py-3 text-sm text-gray-700">
+                        {formatAlertTime(alert.AlertTime)}
+                      </td>
                       <td className="max-w-xs px-4 py-3 text-sm leading-5 text-gray-700">
-                        <p className="truncate" title={formatLocationOneLine(alert.location)}>
-                          {formatLocationOneLine(alert.location)}
+                        <p
+                          className="truncate"
+                          title={getAddress(alert)}
+                        >
+                          {getAddress(alert)}
                         </p>
                       </td>
                       <td className="whitespace-nowrap px-4 py-3 text-sm font-semibold">
@@ -464,8 +488,10 @@ export function AlertsPage() {
                       <td className="whitespace-nowrap px-4 py-3 text-right">
                         <button
                           type="button"
-                          aria-label={`Open options for alert ${alert.id}`}
-                          onClick={(event) => toggleOptionsMenu(alert.id, event.currentTarget)}
+                          aria-label={`Open options for alert ${alert.AlertID}`}
+                          onClick={(e) =>
+                            toggleOptionsMenu(alert.AlertID, e.currentTarget)
+                          }
                           className="inline-flex h-8 w-8 cursor-pointer items-center justify-center rounded-md text-gray-600 transition-colors hover:bg-gray-100 hover:text-gray-900"
                         >
                           <EllipsisVerticalIcon className="h-5 w-5" />
@@ -487,7 +513,10 @@ export function AlertsPage() {
               />
               <div
                 className="fixed z-30 w-44 -translate-x-full rounded-lg border border-gray-200 bg-white p-1 shadow-lg"
-                style={{ top: openOptionsMenu.top, left: openOptionsMenu.left }}
+                style={{
+                  top: openOptionsMenu.top,
+                  left: openOptionsMenu.left,
+                }}
               >
                 <button
                   type="button"
@@ -513,7 +542,7 @@ export function AlertsPage() {
                 <button
                   type="button"
                   onClick={() => {
-                    toggleAlertStatus(menuAlert.id);
+                    toggleAlertStatus(menuAlert.AlertID);
                     setOpenOptionsMenu(null);
                   }}
                   className="block w-full cursor-pointer rounded-md px-3 py-2 text-left text-sm text-gray-800 transition-colors hover:bg-gray-100"
@@ -524,7 +553,7 @@ export function AlertsPage() {
                   <button
                     type="button"
                     onClick={() => {
-                      openDeleteConfirmation(menuAlert.id);
+                      openDeleteConfirmation(menuAlert.AlertID);
                       setOpenOptionsMenu(null);
                     }}
                     className="block w-full cursor-pointer rounded-md px-3 py-2 text-left text-sm text-red-700 transition-colors hover:bg-red-50"
@@ -545,6 +574,7 @@ export function AlertsPage() {
           setSelectedAlert(null);
         }}
         userData={selectedAlert}
+        address={selectedAlert ? getAddress(selectedAlert) : null}
       />
 
       {filterPopoverPosition !== null && (
@@ -556,10 +586,15 @@ export function AlertsPage() {
           />
           <div
             className="fixed z-40 w-72 -translate-x-full rounded-xl border border-gray-200 bg-white p-4 shadow-xl"
-            style={{ top: filterPopoverPosition.top, left: filterPopoverPosition.left }}
+            style={{
+              top: filterPopoverPosition.top,
+              left: filterPopoverPosition.left,
+            }}
           >
             <div className="mb-3 flex items-center justify-between">
-              <h3 className="text-base font-semibold text-gray-900">Filter Alerts</h3>
+              <h3 className="text-base font-semibold text-gray-900">
+                Filter Alerts
+              </h3>
               <button
                 type="button"
                 onClick={clearFilter}
@@ -570,38 +605,27 @@ export function AlertsPage() {
             </div>
 
             <div className="space-y-1">
-              <label className="flex cursor-pointer items-center gap-2 rounded-md px-2 py-1 hover:bg-gray-50">
-                <input
-                  type="radio"
-                  name="statusFilter"
-                  value="all"
-                  checked={draftFilter === "all"}
-                  onChange={() => setDraftFilter("all")}
-                />
-                <span className="text-sm text-gray-800">All</span>
-              </label>
-
-              <label className="flex cursor-pointer items-center gap-2 rounded-md px-2 py-1 hover:bg-gray-50">
-                <input
-                  type="radio"
-                  name="statusFilter"
-                  value="ongoing"
-                  checked={draftFilter === "ongoing"}
-                  onChange={() => setDraftFilter("ongoing")}
-                />
-                <span className="text-sm text-gray-800">Ongoing</span>
-              </label>
-
-              <label className="flex cursor-pointer items-center gap-2 rounded-md px-2 py-1 hover:bg-gray-50">
-                <input
-                  type="radio"
-                  name="statusFilter"
-                  value="completed"
-                  checked={draftFilter === "completed"}
-                  onChange={() => setDraftFilter("completed")}
-                />
-                <span className="text-sm text-gray-800">Completed</span>
-              </label>
+              {(
+                [
+                  { value: "all", label: "All" },
+                  { value: "ongoing", label: "Ongoing" },
+                  { value: "completed", label: "Completed" },
+                ] as { value: StatusFilter; label: string }[]
+              ).map(({ value, label }) => (
+                <label
+                  key={value}
+                  className="flex cursor-pointer items-center gap-2 rounded-md px-2 py-1 hover:bg-gray-50"
+                >
+                  <input
+                    type="radio"
+                    name="statusFilter"
+                    value={value}
+                    checked={draftFilter === value}
+                    onChange={() => setDraftFilter(value)}
+                  />
+                  <span className="text-sm text-gray-800">{label}</span>
+                </label>
+              ))}
             </div>
 
             <div className="mt-4 flex justify-end gap-2">
@@ -627,16 +651,20 @@ export function AlertsPage() {
       {pendingDeleteAlertId !== null && (
         <div className="fixed inset-0 z-60 flex items-center justify-center bg-black/30 p-4">
           <div className="w-full max-w-sm rounded-xl bg-white p-5 text-center shadow-xl">
-            <h3 className="text-lg font-semibold text-gray-900">Delete Alert</h3>
+            <h3 className="text-lg font-semibold text-gray-900">
+              Delete Alert
+            </h3>
             <p className="mt-2 text-sm text-gray-600">
               Are you sure you want to delete alert
               {pendingDeleteAlert && (
                 <>
                   {" "}
-                  <span className="font-semibold">#{pendingDeleteAlert.id}</span>
-                  {" for "}
                   <span className="font-semibold">
-                    {pendingDeleteAlert.firstName} {pendingDeleteAlert.lastName}
+                    #{pendingDeleteAlert.AlertID}
+                  </span>{" "}
+                  for victim{" "}
+                  <span className="font-semibold">
+                    {getVictimName(pendingDeleteAlert)}
                   </span>
                 </>
               )}
