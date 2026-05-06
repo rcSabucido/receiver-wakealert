@@ -1,11 +1,13 @@
 import { ArrowRightStartOnRectangleIcon, BellIcon, MapPinIcon } from "@heroicons/react/24/outline";
 import { NavLink, useNavigate } from "react-router-dom";
+import { alertAPI } from "../lib/api";
 
 export function Sidebar() {
   const navigate = useNavigate();
 
-  const handleSignOut = () => {
-    navigate("/login");
+  const handleSignOut = async () => {
+    await alertAPI.logout();
+    navigate("/login", { replace: true });
   };
 
   return (

@@ -3,8 +3,13 @@ import { useLocation } from "react-router-dom";
 import { ChevronLeftIcon, ChevronRightIcon } from "@heroicons/react/24/outline";
 import InformationModal from "../components/InformationModal";
 import { MapView } from "../components/MapView";
+import {
+  alertAPI,
+  type AlertItem as ApiAlertItem,
+  type VictimDetails,
+} from "../lib/api";
 
-type AlertItem = {
+type ViewAlert = {
   id: number;
   firstName: string;
   lastName: string;
@@ -14,135 +19,212 @@ type AlertItem = {
   isCompleted: boolean;
 };
 
-const initialAlerts: AlertItem[] = [
-  {
-    id: 1,
-    firstName: "Juan",
-    lastName: "Dela Cruz",
-    latitude: "7.0842",
-    longitude: "125.6234",
-    alertTime: "2026-02-21 14:35",
-    isCompleted: false,
-  },
-  {
-    id: 2,
-    firstName: "Pedro",
-    lastName: "Reyes",
-    latitude: "7.1456",
-    longitude: "125.6789",
-    alertTime: "2026-02-21 22:47",
-    isCompleted: true,
-  },
-  {
-    id: 3,
-    firstName: "Maria",
-    lastName: "Santos",
-    latitude: "7.0512",
-    longitude: "125.5932",
-    alertTime: "2026-02-21 09:18",
-    isCompleted: false,
-  },
-  {
-    id: 4,
-    firstName: "Ana",
-    lastName: "Garcia",
-    latitude: "7.1234",
-    longitude: "125.6512",
-    alertTime: "2026-02-21 17:05",
-    isCompleted: true,
-  },
-  {
-    id: 5,
-    firstName: "Luis",
-    lastName: "Martinez",
-    latitude: "6.9876",
-    longitude: "125.5678",
-    alertTime: "2026-02-21 12:30",
-    isCompleted: false,
-  },
-  {
-    id: 6,
-    firstName: "Sofia",
-    lastName: "Lopez",
-    latitude: "7.1089",
-    longitude: "125.6945",
-    alertTime: "2026-02-21 19:45",
-    isCompleted: true,
-  },
-];
+type ToastKind = "success" | "error";
 
 export function LocationsPage() {
   const location = useLocation();
   const userData = location.state?.userData;
-  const [alertsData, setAlertsData] = useState<AlertItem[]>(initialAlerts);
+  const [alertsData, setAlertsData] = useState<ApiAlertItem[]>([]);
+  const [victimDetailsById, setVictimDetailsById] = useState<
+    Record<number, VictimDetails>
+  >({});
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<"Ongoing" | "Completed">("Ongoing");
   const [selectedAlertId, setSelectedAlertId] = useState<number | null>(null);
   const [isCardCollapsed, setisCardCollapsed] = useState(false);
+  const [toast, setToast] = useState<{ message: string; kind: ToastKind } | null>(
+    null
+  );
 
-  // Modal States
+  
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [selectedPatient, setSelectedPatient] = useState<any>(null);
+  const [selectedPatient, setSelectedPatient] = useState<ApiAlertItem | null>(
+    null
+  );
 
   const cardRefs = useRef<{ [key: number]: HTMLDivElement | null }>({});
 
   useEffect(() => {
-    if (userData) {
-      setSelectedAlertId(userData.id);
+    let cancelled = false;
 
-      setAlertsData((prev) =>
-        prev.map((alert) =>
-          alert.id === userData.id
-            ? {
-                ...alert,
-                firstName: userData.firstName,
-                lastName: userData.lastName,
-                alertTime: userData.alertTime,
-                isCompleted: userData.isCompleted,
-              }
-            : alert
-        )
+    const fetchAlerts = async () => {
+      try {
+        setIsLoading(true);
+        const data = await alertAPI.getAlerts();
+        if (cancelled) return;
+        const active = data.filter((alert) => !alert.isDeleted);
+        setAlertsData(active);
+        setError(null);
+      } catch (err) {
+        if (cancelled) return;
+        setError(err instanceof Error ? err.message : "Failed to load alerts");
+        setAlertsData([]);
+      } finally {
+        if (!cancelled) {
+          setIsLoading(false);
+        }
+      }
+    };
+
+    fetchAlerts();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  useEffect(() => {
+    if (alertsData.length === 0) return;
+
+    const missingIds = Array.from(
+      new Set(alertsData.map((alert) => alert.VictimID))
+    ).filter((id) => !victimDetailsById[id]);
+
+    if (missingIds.length === 0) return;
+
+    let cancelled = false;
+
+    const fetchVictimDetails = async () => {
+      const results = await Promise.all(
+        missingIds.map(async (id) => {
+          try {
+            const details = await alertAPI.getVictimDetails(id);
+            return { id, details };
+          } catch {
+            return { id, details: null };
+          }
+        })
       );
 
-      setActiveTab(userData.isCompleted ? "Completed" : "Ongoing");
+      if (cancelled) return;
 
-      setTimeout(() => {
-        const element = cardRefs.current[userData.id];
-        if (element) {
-          element.scrollIntoView({
-            behavior: "smooth",
-            block: "center",
-          });
-        }
-      }, 150);
+      setVictimDetailsById((prev) => {
+        const next = { ...prev };
+        results.forEach((result) => {
+          if (result.details) next[result.id] = result.details;
+        });
+        return next;
+      });
+    };
 
-      // Clear highlight after 700 milliseconds
-      const timer = setTimeout(() => {
-        setSelectedAlertId(null);
-      }, 700);
+    fetchVictimDetails();
+    return () => {
+      cancelled = true;
+    };
+  }, [alertsData, victimDetailsById]);
 
-      return () => clearTimeout(timer);
-    }
-  }, [userData]);
+  useEffect(() => {
+    if (!userData) return;
+    setSelectedAlertId(userData.AlertID);
+    setActiveTab(userData.isCompleted ? "Completed" : "Ongoing");
 
-  const toggleStatus = (id: number) => {
-    setAlertsData((prev) =>
-      prev.map((alert) =>
-        alert.id === id
-          ? { ...alert, isCompleted: !alert.isCompleted }
-          : alert
-      )
-    );
+    const highlightTimer = setTimeout(() => {
+      const element = cardRefs.current[userData.AlertID];
+      if (element) {
+        element.scrollIntoView({
+          behavior: "smooth",
+          block: "center",
+        });
+      }
+    }, 150);
+
+    const clearTimer = setTimeout(() => {
+      setSelectedAlertId(null);
+    }, 700);
+
+    return () => {
+      clearTimeout(highlightTimer);
+      clearTimeout(clearTimer);
+    };
+  }, [userData, alertsData.length]);
+
+  useEffect(() => {
+    if (!toast) return;
+    const timeoutId = window.setTimeout(() => setToast(null), 3000);
+    return () => window.clearTimeout(timeoutId);
+  }, [toast]);
+
+  const formatAlertDate = (value: string): string => {
+    if (!value) return "";
+    const normalized = value.includes("T") ? value : value.replace(" ", "T");
+    const date = new Date(normalized);
+    if (Number.isNaN(date.getTime())) return value.split(" ")[0] ?? value;
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, "0");
+    const day = String(date.getDate()).padStart(2, "0");
+    return `${year}-${month}-${day}`;
   };
 
-  const filteredAlerts = alertsData.filter((alert) =>
+  const getNameParts = (
+    details: VictimDetails | undefined,
+  ): { firstName: string; lastName: string } => {
+    if (details?.firstName || details?.lastName) {
+      return {
+        firstName: details?.firstName ?? "",
+        lastName: details?.lastName ?? "",
+      };
+    }
+    if (details?.fullName) {
+      const [first, ...rest] = details.fullName.split(" ");
+      return {
+        firstName: first ?? "",
+        lastName: rest.join(" "),
+      };
+    }
+    return { firstName: "", lastName: "" };
+  };
+
+  const viewAlerts: ViewAlert[] = alertsData.map((alert) => {
+    const details = victimDetailsById[alert.VictimID];
+    const nameParts = getNameParts(details);
+    return {
+      id: alert.AlertID,
+      firstName: nameParts.firstName,
+      lastName: nameParts.lastName,
+      latitude: alert.Latitude,
+      longitude: alert.Longitude,
+      alertTime: formatAlertDate(alert.AlertTime),
+      isCompleted: alert.isCompleted,
+    };
+  });
+
+  const filteredAlerts = viewAlerts.filter((alert) =>
     activeTab === "Ongoing" ? !alert.isCompleted : alert.isCompleted
   );
 
-  const handleCardClick = (alert: AlertItem) => {
+  const toggleStatus = async (id: number) => {
+    const current = alertsData.find((alert) => alert.AlertID === id);
+    if (!current) return;
+    const nextStatus = !current.isCompleted;
+
+    setAlertsData((prev) =>
+      prev.map((alert) =>
+        alert.AlertID === id ? { ...alert, isCompleted: nextStatus } : alert
+      )
+    );
+
+    try {
+      await alertAPI.updateAlert(id, { isCompleted: nextStatus });
+      setToast({ message: "Alert status updated.", kind: "success" });
+    } catch {
+      setAlertsData((prev) =>
+        prev.map((alert) =>
+          alert.AlertID === id
+            ? { ...alert, isCompleted: current.isCompleted }
+            : alert
+        )
+      );
+      setToast({ message: "Failed to update alert status.", kind: "error" });
+    }
+  };
+
+  const handleCardClick = (alert: ViewAlert) => {
     setSelectedAlertId(alert.id);
   };
 
-  const handleOpenModal = (alert: AlertItem) => {
+  const handleOpenModal = (alertId: number) => {
+    const alert = alertsData.find((item) => item.AlertID === alertId) ?? null;
+    if (!alert) return;
     setSelectedPatient(alert);
     setIsModalOpen(true);
   };
@@ -150,13 +232,13 @@ export function LocationsPage() {
   return (
     <div className="flex h-full w-full bg-[#E5E7EB] overflow-hidden font-sans">
 
-      {/* List Section */}
+     
       <div
         className={`relative flex flex-col bg-[#F3F4F6] border-r border-gray-300 transition-all 
                     duration-300 ${isCardCollapsed ? "w-0 overflow-hidden" : "w-[300px]"
         }`}
       >
-        {/* Navigation Tabs */}
+       
         <div className="p-2">
           <div className="flex bg-[#3F8EFC] p-1 rounded-lg border border-blue-600">
             <button
@@ -184,6 +266,16 @@ export function LocationsPage() {
 
         {/* Scrollable List of Cards */}
         <div className="flex-1 overflow-y-auto p-3 space-y-3 no-scrollbar">
+          {isLoading && (
+            <div className="rounded-lg bg-white p-3 text-sm text-gray-700 shadow-sm">
+              Loading alerts...
+            </div>
+          )}
+          {error && (
+            <div className="rounded-lg bg-red-50 p-3 text-sm text-red-700 shadow-sm">
+              {error}
+            </div>
+          )}
           {filteredAlerts.map((alert) => {
             const isHighlighted = selectedAlertId === alert.id;
 
@@ -216,8 +308,8 @@ export function LocationsPage() {
                     }}
                     className={`text-[12px] px-2 py-1 cursor-pointer rounded font-semibold tracking-wider ${
                       alert.isCompleted
-                        ? "bg-green-100 text-green-600"
-                        : "bg-red-100 text-red-700"
+                        ? "bg-green-100 text-green-700 hover:bg-green-200"
+                        : "bg-red-100 text-red-700 hover:bg-red-200"
                     }`}
                   >
                     {alert.isCompleted ? "Completed" : "Ongoing"}
@@ -253,11 +345,10 @@ export function LocationsPage() {
                   </div>
                 </div>
 
-                {/* View Information Button */}
                 <button
                   onClick={(e) => {
                     e.stopPropagation();
-                    handleOpenModal(alert);
+                    handleOpenModal(alert.id);
                   }}
                   className="w-full cursor-pointer bg-[#D5FF9E] hover:bg-[#c2f080] text-black 
                              font-semibold py-1 rounded-lg text-sm shadow-sm transition-all active:scale-[0.98]"
@@ -270,7 +361,6 @@ export function LocationsPage() {
         </div>
       </div>
 
-      {/* Collapse/Expand Toggle Button */}
       <div className="relative flex items-center">
         <button
           onClick={() => setisCardCollapsed((prev) => !prev)}
@@ -292,16 +382,32 @@ export function LocationsPage() {
         <MapView 
           alerts={filteredAlerts}
           focusedId={selectedAlertId}
-          onMarkerClick={(alert) => handleOpenModal(alert)}
+          onMarkerClick={(alert) => handleOpenModal(alert.id)}
         />
       </div>
-
-      {/* Modal Component */}
+          
       <InformationModal
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
         userData={selectedPatient}
       />
+
+      {toast && (
+        <div
+          className="fixed bottom-6 right-6 z-[9999] w-full max-w-xs"
+          aria-live="polite"
+        >
+          <div
+            className={`rounded-xl border px-4 py-3 text-sm font-semibold shadow-lg ${
+              toast.kind === "success"
+                ? "border-green-200 bg-green-100 text-green-800"
+                : "border-red-200 bg-red-100 text-red-800"
+            }`}
+          >
+            {toast.message}
+          </div>
+        </div>
+      )}
     </div>
   );
 }
