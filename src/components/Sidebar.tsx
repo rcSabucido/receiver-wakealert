@@ -1,6 +1,8 @@
 import { ArrowRightStartOnRectangleIcon, BellIcon, MapPinIcon } from "@heroicons/react/24/outline";
 import { NavLink, useNavigate } from "react-router-dom";
 import { alertAPI } from "../lib/api";
+import WebLogoWhite from "../assets/Web_Logo_(white).svg";
+
 
 export function Sidebar() {
   const navigate = useNavigate();
@@ -12,8 +14,12 @@ export function Sidebar() {
 
   return (
     <div className="w-64 bg-[#3F8EFC] text-white h-screen flex flex-col items-center p-6">
-        <div className="w-40 h-40 bg-white rounded-full mb-8"></div>
-      <nav className="flex-1">
+        <img
+          src={WebLogoWhite}
+          alt="WakeAlert Logo"
+          className="w-60 h-auto object-contain mb-4 -mt-12"
+        />      
+        <nav className="flex-1 -mt-20">
         <NavLink
           to="/alerts"
           className={({ isActive }) =>
