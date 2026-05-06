@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import WebLogo from "../assets/Web_Logo_(blue).svg";
 import { EyeIcon, EyeSlashIcon } from "@heroicons/react/24/outline";
 import { alertAPI } from "../lib/api";
 
@@ -27,10 +28,13 @@ export function LoginPage() {
 
   return (
     <div className="flex h-screen w-full font-sans overflow-hidden bg-white">
-      <div className="hidden md:flex w-1/2 items-center justify-center">
-        <div className="h-[30vw] w-[30vw] rounded-full bg-blue-500 shadow-2xl"></div>
-      </div>
-
+    <div className="hidden md:flex w-1/2 items-center justify-center">
+      <img
+        src={WebLogo}
+        alt="WakeAlert Logo"
+        className="w-200 h-auto object-contain mt-40 -translate-x-3"
+      />
+    </div>
       <div className="flex w-full md:w-1/2 items-start justify-start bg-blue-500 pt-[18vh] px-6 md:pl-19">
         <div className="w-full max-w-[738px]">
           <h1 className="mb-10 text-4xl font-semibold text-white tracking-tight">
