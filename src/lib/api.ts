@@ -123,6 +123,15 @@ class AlertAPI {
     return response.json();
   }
 
+  async deleteAlert(id: number): Promise<AlertItem> {
+    const response = await fetch(`${this.baseUrl}/alerts/${id}`, {
+      method: 'DELETE',
+      headers: this.getHeaders(),
+    });
+    if (!response.ok) throw new Error('Failed to delete alert');
+    return response.json();
+  }
+
   async getVictims(): Promise<unknown[]> {
     const response = await fetch(`${this.baseUrl}/victims`, {
       headers: this.getHeaders(),

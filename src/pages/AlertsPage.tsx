@@ -13,6 +13,7 @@ type ViewMode = "card" | "list";
 type StatusFilter = "all" | "ongoing" | "completed";
 type SortField = "id" | "victimId" | "alertTime" | "location" | "status";
 type SortDirection = "asc" | "desc";
+type ToastKind = "success" | "error";
 
 export function AlertsPage() {
   const [alertsData, setAlertsData] = useState<AlertItem[]>([]);
@@ -49,6 +50,11 @@ export function AlertsPage() {
   const [alertStatuses, setAlertStatuses] = useState<Record<number, boolean>>(
     {}
   );
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [toast, setToast] = useState<{
+    message: string;
+    kind: ToastKind;
+  } | null>(null);
 
   const navigate = useNavigate();
   const handleViewLocation = (alert: AlertItem) => {
@@ -171,6 +177,12 @@ export function AlertsPage() {
     };
   }, [alertsData]);
 
+  useEffect(() => {
+    if (!toast) return;
+    const timeoutId = window.setTimeout(() => setToast(null), 3000);
+    return () => window.clearTimeout(timeoutId);
+  }, [toast]);
+
   const getAddress = (alert: AlertItem): string => {
     const key = `${alert.Latitude},${alert.Longitude}`;
     return geocodedAddresses[key] ?? `${alert.Latitude}, ${alert.Longitude}`;
@@ -221,10 +233,29 @@ export function AlertsPage() {
   const openDeleteConfirmation = (alertId: number) =>
     setPendingDeleteAlertId(alertId);
   const cancelDelete = () => setPendingDeleteAlertId(null);
-  const confirmDelete = () => {
-    if (pendingDeleteAlertId === null) return;
-    deleteAlert(pendingDeleteAlertId);
+  const showToast = (message: string, kind: ToastKind) =>
+    setToast({ message, kind });
+  const confirmDelete = async () => {
+    if (pendingDeleteAlertId === null || isDeleting) return;
+    const alertId = pendingDeleteAlertId;
+    const previousAlerts = alertsData;
+    const previousStatuses = alertStatuses;
+    setIsDeleting(true);
+    deleteAlert(alertId);
     setPendingDeleteAlertId(null);
+    try {
+      await alertAPI.deleteAlert(alertId);
+      showToast("Alert deleted.", "success");
+    } catch (err) {
+      setAlertsData(previousAlerts);
+      setAlertStatuses(previousStatuses);
+      showToast(
+        err instanceof Error ? err.message : "Failed to delete alert",
+        "error"
+      );
+    } finally {
+      setIsDeleting(false);
+    }
   };
 
   const openFilterPopover = (anchor: HTMLButtonElement) => {
@@ -682,11 +713,29 @@ export function AlertsPage() {
               <button
                 type="button"
                 onClick={confirmDelete}
+                disabled={isDeleting}
                 className="min-w-28 cursor-pointer rounded-md bg-red-600 px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-red-700"
               >
-                Delete
+                {isDeleting ? "Deleting..." : "Delete"}
               </button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {toast && (
+        <div
+          className="fixed bottom-6 right-6 z-70 w-full max-w-xs"
+          aria-live="polite"
+        >
+          <div
+            className={`rounded-xl border px-4 py-3 text-sm font-semibold shadow-lg ${
+              toast.kind === "success"
+                ? "border-green-200 bg-green-100 text-green-800"
+                : "border-red-200 bg-red-100 text-red-800"
+            }`}
+          >
+            {toast.message}
           </div>
         </div>
       )}
