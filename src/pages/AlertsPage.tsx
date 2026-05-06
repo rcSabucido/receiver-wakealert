@@ -67,6 +67,9 @@ export function AlertsPage() {
   const [alertStatuses, setAlertStatuses] = useState<Record<number, boolean>>(
     {}
   );
+  const [isUpdatingStatus, setIsUpdatingStatus] = useState<
+    Record<number, boolean>
+  >({});
   const [isDeleting, setIsDeleting] = useState(false);
   const [toast, setToast] = useState<{
     message: string;
@@ -236,8 +239,31 @@ export function AlertsPage() {
     return `${year}-${month}-${day} ${hours}:${minutes}`;
   };
 
-  const toggleAlertStatus = (alertId: number) => {
-    setAlertStatuses((prev) => ({ ...prev, [alertId]: !prev[alertId] }));
+  const toggleAlertStatus = async (alertId: number) => {
+    if (isUpdatingStatus[alertId]) return;
+    const currentAlert = alertsData.find((alert) => alert.AlertID === alertId);
+    const currentStatus =
+      alertStatuses[alertId] ?? currentAlert?.isCompleted ?? false;
+    const nextStatus = !currentStatus;
+
+    setAlertStatuses((prev) => ({ ...prev, [alertId]: nextStatus }));
+    setIsUpdatingStatus((prev) => ({ ...prev, [alertId]: true }));
+
+    try {
+      await alertAPI.updateAlert(alertId, { isCompleted: nextStatus });
+      setToast({
+        message: "Alert status updated.",
+        kind: "success",
+      });
+    } catch (err) {
+      setAlertStatuses((prev) => ({ ...prev, [alertId]: currentStatus }));
+      setToast({
+        message: err instanceof Error ? err.message : "Failed to update alert",
+        kind: "error",
+      });
+    } finally {
+      setIsUpdatingStatus((prev) => ({ ...prev, [alertId]: false }));
+    }
   };
 
   const deleteAlert = (alertId: number) => {
@@ -397,6 +423,7 @@ export function AlertsPage() {
             {cardAlerts.map((alert, index) => {
               const isCompleted =
                 alertStatuses[alert.AlertID] ?? alert.isCompleted;
+              const isUpdating = Boolean(isUpdatingStatus[alert.AlertID]);
               const address = getAddress(alert);
 
               return (
@@ -411,13 +438,22 @@ export function AlertsPage() {
                   <button
                     type="button"
                     onClick={() => toggleAlertStatus(alert.AlertID)}
-                    className={`cursor-pointer rounded-md px-3 py-1 text-xs font-semibold transition-colors duration-200 ${
+                    disabled={isUpdating}
+                    className={`rounded-md px-3 py-1 text-xs font-semibold transition-colors duration-200 ${
+                      isUpdating
+                        ? "cursor-not-allowed opacity-60"
+                        : "cursor-pointer"
+                    } ${
                       isCompleted
                         ? "bg-green-100 text-green-700 hover:bg-green-200"
                         : "bg-red-100 text-red-700 hover:bg-red-200"
                     }`}
                   >
-                    {isCompleted ? "Completed" : "Ongoing"}
+                    {isUpdating
+                      ? "Updating..."
+                      : isCompleted
+                        ? "Completed"
+                        : "Ongoing"}
                   </button>
                 </div>
 
@@ -654,9 +690,16 @@ export function AlertsPage() {
                     toggleAlertStatus(menuAlert.AlertID);
                     setOpenOptionsMenu(null);
                   }}
-                  className="block w-full cursor-pointer rounded-md px-3 py-2 text-left text-sm text-gray-800 transition-colors hover:bg-gray-100"
+                  disabled={Boolean(isUpdatingStatus[menuAlert.AlertID])}
+                  className={`block w-full rounded-md px-3 py-2 text-left text-sm text-gray-800 transition-colors ${
+                    isUpdatingStatus[menuAlert.AlertID]
+                      ? "cursor-not-allowed opacity-60"
+                      : "cursor-pointer hover:bg-gray-100"
+                  }`}
                 >
-                  Change Status
+                  {isUpdatingStatus[menuAlert.AlertID]
+                    ? "Updating..."
+                    : "Change Status"}
                 </button>
                 {menuAlertIsCompleted && (
                   <button
