@@ -7,7 +7,7 @@ export function Sidebar() {
 
   const handleSignOut = async () => {
     await alertAPI.logout();
-    navigate("/login");
+    navigate("/login", { replace: true });
   };
 
   return (
