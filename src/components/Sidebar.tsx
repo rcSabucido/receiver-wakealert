@@ -19,7 +19,7 @@ export function Sidebar() {
           alt="WakeAlert Logo"
           className="w-60 h-auto object-contain mb-4 -mt-12"
         />      
-        <nav className="flex-1 -mt-20">
+        <nav className="flex-1 -mt-23">
         <NavLink
           to="/alerts"
           className={({ isActive }) =>
