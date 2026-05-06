@@ -322,6 +322,13 @@ export function AlertsPage() {
           return sortConfig.direction === "asc" ? v : -v;
         });
 
+  const allCoordsGeocoded =
+    alertsData.length === 0
+      ? true
+      : alertsData.every((a) =>
+          Boolean(geocodedAddresses[`${a.Latitude},${a.Longitude}`])
+        );
+
   const pendingDeleteAlert =
     pendingDeleteAlertId === null
       ? null
@@ -356,17 +363,18 @@ export function AlertsPage() {
       </div>
 
       {viewMode === "card" ? (
-        <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
-          {cardAlerts.map((alert, index) => {
-            const isCompleted =
-              alertStatuses[alert.AlertID] ?? alert.isCompleted;
-            const address = getAddress(alert);
+        allCoordsGeocoded ? (
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
+            {cardAlerts.map((alert, index) => {
+              const isCompleted =
+                alertStatuses[alert.AlertID] ?? alert.isCompleted;
+              const address = getAddress(alert);
 
-            return (
-              <article
-                key={`${alert.AlertID}-${index}`}
-                className="flex flex-col gap-4 rounded-xl border border-gray-200 bg-white p-5 shadow-sm"
-              >
+              return (
+                <article
+                  key={`${alert.AlertID}-${index}`}
+                  className="flex flex-col gap-4 rounded-xl border border-gray-200 bg-white p-5 shadow-sm"
+                >
                 <div className="flex items-center justify-between border-b border-gray-200 pb-3">
                   <p className="text-sm font-semibold text-gray-900">
                     #{alert.AlertID}
@@ -442,10 +450,45 @@ export function AlertsPage() {
                     </button>
                   )}
                 </div>
-              </article>
-            );
-          })}
-        </div>
+                </article>
+              );
+            })}
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
+            {Array.from({ length: 6 }).map((_, index) => (
+              <div
+                key={`alert-skeleton-${index}`}
+                className="flex flex-col gap-4 rounded-xl border border-gray-200 bg-white p-5 shadow-sm"
+              >
+                <div className="flex items-center justify-between border-b border-gray-200 pb-3">
+                  <div className="h-4 w-16 rounded bg-gray-200 skeleton-shimmer" />
+                    <div className="h-6 w-20 rounded bg-gray-200 skeleton-shimmer" />
+                </div>
+                <div className="flex items-start justify-between gap-4 border-b border-gray-200 pb-3">
+                  <div className="min-w-0 flex-1 space-y-2">
+                      <div className="h-3 w-24 rounded bg-gray-200 skeleton-shimmer" />
+                      <div className="h-4 w-full rounded bg-gray-200 skeleton-shimmer" />
+                  </div>
+                    <div className="h-16 w-20 rounded bg-gray-200 skeleton-shimmer" />
+                </div>
+                <div className="flex items-start justify-between gap-4">
+                  <div className="space-y-2">
+                      <div className="h-3 w-20 rounded bg-gray-200 skeleton-shimmer" />
+                      <div className="h-4 w-28 rounded bg-gray-200 skeleton-shimmer" />
+                  </div>
+                  <div className="space-y-2 text-right">
+                      <div className="ml-auto h-3 w-20 rounded bg-gray-200 skeleton-shimmer" />
+                      <div className="ml-auto h-4 w-24 rounded bg-gray-200 skeleton-shimmer" />
+                  </div>
+                </div>
+                <div className="mt-1 flex items-center justify-between gap-1">
+                    <div className="h-10 w-full rounded bg-gray-200 skeleton-shimmer" />
+                </div>
+              </div>
+            ))}
+          </div>
+        )
       ) : (
         <div className="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
           <div className="overflow-x-auto">
