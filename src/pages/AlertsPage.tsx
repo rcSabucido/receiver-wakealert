@@ -16,13 +16,30 @@ type SortDirection = "asc" | "desc";
 type ToastKind = "success" | "error";
 
 export function AlertsPage() {
+  const CACHE_KEY = "geocoded_addresses"
   const [alertsData, setAlertsData] = useState<AlertItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [geocodedAddresses, setGeocodedAddresses] = useState<
     Record<string, string>
-  >({});
-  const geocodedRef = useRef<Record<string, string>>({});
+  >(() => {
+    try {
+      return JSON.parse(localStorage.getItem(CACHE_KEY) ?? "{}");
+    } catch {
+      return {};
+    }
+  });
+
+  const geocodedRef = useRef<Record<string, string>>(
+  (() => {
+    try {
+      return JSON.parse(localStorage.getItem(CACHE_KEY) ?? "{}");
+    } catch {
+      return {};
+    }
+  })()
+);
+
   const [viewMode, setViewMode] = useState<ViewMode>("card");
   const [selectedAlert, setSelectedAlert] = useState<AlertItem | null>(null);
   const [isInfoModalOpen, setIsInfoModalOpen] = useState(false);
@@ -148,12 +165,24 @@ export function AlertsPage() {
         try {
           const res = await fetch(
             `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}`,
-            { headers: { "Accept-Language": "en" } }
+            { headers: { 
+              "Accept-Language": "en",
+              "User-Agent": "receiver-wakealert/1.0 (rcsabucido@gmail.com)",
+            
+            } }
           );
           const json = await res.json();
           const address =
             (json.display_name as string | undefined) ?? `${lat}, ${lon}`;
           geocodedRef.current[coord] = address;
+          try {
+            localStorage.setItem(
+              CACHE_KEY,
+              JSON.stringify(geocodedRef.current)
+            );
+          } catch {
+
+          }
           if (!cancelled) {
             setGeocodedAddresses((prev) => ({ ...prev, [coord]: address }));
           }
@@ -166,7 +195,7 @@ export function AlertsPage() {
         }
 
         if (!cancelled && i < coordsToFetch.length - 1) {
-          await new Promise((r) => setTimeout(r, 1100));
+          await new Promise((r) => setTimeout(r, 1200));
         }
       }
     };
@@ -313,7 +342,7 @@ export function AlertsPage() {
           let v = 0;
           if (sortConfig.field === "id") v = a.AlertID - b.AlertID;
           if (sortConfig.field === "victimId")
-            v = a.VictimID - b.VictimID;
+            v = getVictimName(a).localeCompare(getVictimName(b));
           if (sortConfig.field === "alertTime")
             v = a.AlertTime.localeCompare(b.AlertTime);
           if (sortConfig.field === "location")
@@ -498,7 +527,7 @@ export function AlertsPage() {
                   {(
                     [
                       { label: "Alert ID", field: "id" },
-                      { label: "Victim ID", field: "victimId" },
+                      { label: "Name", field: "victimId" },
                       { label: "Alert Time", field: "alertTime" },
                       { label: "Location", field: "location" },
                       { label: "Status", field: "status" },
@@ -535,18 +564,24 @@ export function AlertsPage() {
                         #{alert.AlertID}
                       </td>
                       <td className="whitespace-nowrap px-4 py-3 text-sm text-gray-800">
-                        {alert.VictimID}
+                        {getVictimName(alert)}
                       </td>
                       <td className="whitespace-nowrap px-4 py-3 text-sm text-gray-700">
                         {formatAlertTime(alert.AlertTime)}
                       </td>
                       <td className="max-w-xs px-4 py-3 text-sm leading-5 text-gray-700">
-                        <p
-                          className="truncate"
-                          title={getAddress(alert)}
-                        >
-                          {getAddress(alert)}
-                        </p>
+                        {geocodedAddresses[
+                          `${alert.Latitude},${alert.Longitude}`
+                        ] ? (
+                          <p
+                            className="truncate"
+                            title={getAddress(alert)}
+                          >
+                            {getAddress(alert)}
+                          </p>
+                        ) : (
+                          <div className="h-4 w-48 rounded bg-gray-200 skeleton-shimmer" />
+                        )}
                       </td>
                       <td className="whitespace-nowrap px-4 py-3 text-sm font-semibold">
                         <span
