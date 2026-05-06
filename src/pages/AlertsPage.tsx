@@ -222,8 +222,7 @@ export function AlertsPage() {
 
   const getVictimName = (alert: AlertItem): string => {
     const details = victimDetailsById[alert.VictimID];
-    if (details?.fullName) return details.fullName;
-    return `Victim #${alert.VictimID}`;
+    return details?.fullName ?? "";
   };
 
   const formatAlertTime = (value: string): string => {
@@ -462,7 +461,6 @@ export function AlertsPage() {
                     <p className="text-xs font-semibold uppercase tracking-wide text-gray-500">
                       Current Location:
                     </p>
-                    {/* swap this out so that cards wont show until address finishes loading */}
                     <p className="text-sm leading-6 text-gray-700">{address}</p>
                   </div>
                   <MiniMap
@@ -477,9 +475,13 @@ export function AlertsPage() {
                     <p className="text-xs font-semibold uppercase tracking-wide text-gray-500">
                       Name:
                     </p>
-                    <p className="font-semibold text-gray-900">
-                      {getVictimName(alert)}
-                    </p>
+                    {getVictimName(alert) ? (
+                      <p className="font-semibold text-gray-900">
+                        {getVictimName(alert)}
+                      </p>
+                    ) : (
+                      <span className="inline-block h-[1em] w-[10ch] rounded bg-gray-200 align-middle skeleton-shimmer" />
+                    )}
                   </div>
                   <div className="text-right">
                     <p className="text-xs font-semibold uppercase tracking-wide text-gray-500">
@@ -593,6 +595,7 @@ export function AlertsPage() {
                 {listAlerts.map((alert, index) => {
                   const isCompleted =
                     alertStatuses[alert.AlertID] ?? alert.isCompleted;
+                  const victimName = getVictimName(alert);
 
                   return (
                     <tr key={`${alert.AlertID}-${index}`}>
@@ -600,7 +603,11 @@ export function AlertsPage() {
                         #{alert.AlertID}
                       </td>
                       <td className="whitespace-nowrap px-4 py-3 text-sm text-gray-800">
-                        {getVictimName(alert)}
+                        {victimName ? (
+                          victimName
+                        ) : (
+                          <span className="inline-block h-[1em] w-[10ch] rounded bg-gray-200 align-middle skeleton-shimmer" />
+                        )}
                       </td>
                       <td className="whitespace-nowrap px-4 py-3 text-sm text-gray-700">
                         {formatAlertTime(alert.AlertTime)}

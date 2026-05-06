@@ -385,7 +385,7 @@ export function LocationsPage() {
           onMarkerClick={(alert) => handleOpenModal(alert.id)}
         />
       </div>
-
+          
       <InformationModal
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
