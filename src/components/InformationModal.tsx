@@ -35,6 +35,9 @@ const InformationModal = ({
         setIsLoading(true);
         setError(null);
         const data = await alertAPI.getVictimDetails(victimId);
+        if (data["address"] !== null && data["address"] !== undefined) {
+          data["address"] = data["address"].replaceAll("▞", ", ");
+        }
         if (!cancelled) {
           setVictimDetails(data);
         }
