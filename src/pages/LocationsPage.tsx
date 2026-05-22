@@ -89,6 +89,9 @@ export function LocationsPage() {
         missingIds.map(async (id) => {
           try {
             const details = await alertAPI.getVictimDetails(id);
+            if (details["address"] !== null && details["address"] !== undefined) {
+              details["address"] = details["address"].replaceAll("▞", ", ");
+            }
             return { id, details };
           } catch {
             return { id, details: null };

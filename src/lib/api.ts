@@ -84,7 +84,11 @@ class AlertAPI {
       headers: this.getHeaders(),
     });
     if (!response.ok) throw new Error('Failed to fetch alerts');
-    const data = await response.json();
+    var data = await response.json();
+    if (data == null) {
+      // Handle the case where there are no alerts at all.
+      data = [];
+    }
     return (data as Array<Record<string, unknown>>).map((alert) => ({
       AlertID: alert.AlertID as number,
       Latitude: alert.Latitude as string,
