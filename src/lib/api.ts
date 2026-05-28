@@ -100,7 +100,7 @@ class AlertAPI {
     }));
   }
 
-  public stringToAlert(alertString: String): AlertItem {
+  public stringToAlert(alertString: string): AlertItem {
     const alert = JSON.parse(alertString) as Record<string, unknown>;
     return {
       AlertID: alert.AlertID as number,

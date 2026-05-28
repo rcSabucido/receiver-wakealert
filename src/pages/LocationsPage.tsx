@@ -28,7 +28,7 @@ export function LocationsPage() {
   const location = useLocation();
   const userData = location.state?.userData;
   const [alertsData, setAlertsData] = useState<ApiAlertItem[]>([]);
-  const [newAlert, setNewAlert] = useState<ApiAlertItem>(null);
+  const [newAlert, setNewAlert] = useState<ApiAlertItem | null>(null);
   const [victimDetailsById, setVictimDetailsById] = useState<
     Record<number, VictimDetails>
   >({});

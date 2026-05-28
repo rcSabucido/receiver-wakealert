@@ -21,7 +21,7 @@ const API_BASE_URL = import.meta.env.VITE_API_URL;
 export function AlertsPage() {
   const CACHE_KEY = "geocoded_addresses"
   const [alertsData, setAlertsData] = useState<AlertItem[]>([]);
-  const [newAlert, setNewAlert] = useState<ApiAlertItem>(null);
+  const [newAlert, setNewAlert] = useState<AlertItem | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [geocodedAddresses, setGeocodedAddresses] = useState<

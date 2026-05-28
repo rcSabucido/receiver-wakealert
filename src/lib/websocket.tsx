@@ -11,7 +11,7 @@ const PING_INTERVAL_MS = 10_000;
 
 export default function WebSocketClient({ url, onMessage }: WebSocketClientProps) {
 
-  const { sendMessage, lastMessage, readyState } = useWebSocket(url, {
+  const { sendMessage, /*lastMessage,*/ readyState } = useWebSocket(url, {
     shouldReconnect: () => true,
     onMessage,
   });
@@ -26,6 +26,7 @@ export default function WebSocketClient({ url, onMessage }: WebSocketClientProps
     return () => clearInterval(interval);
   }, [readyState, sendMessage]);
 
+  /*
   const connectionStatus = {
     [ws.ReadyState.CONNECTING]: "Connecting",
     [ws.ReadyState.OPEN]: "Open",
@@ -33,6 +34,7 @@ export default function WebSocketClient({ url, onMessage }: WebSocketClientProps
     [ws.ReadyState.CLOSED]: "Closed",
     [ws.ReadyState.UNINSTANTIATED]: "Uninstantiated",
   }[readyState];
+  */
 
   return (
     <div>
