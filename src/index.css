@@ -5,7 +5,7 @@ input::-ms-clear {
   display: none;
 }
 
-body {
+body, span, button, h1, label {
   font-family: 'Poppins', sans-serif;
 }
 

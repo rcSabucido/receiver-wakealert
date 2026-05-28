@@ -21,6 +21,7 @@ const API_BASE_URL = import.meta.env.VITE_API_URL;
 export function AlertsPage() {
   const CACHE_KEY = "geocoded_addresses"
   const [alertsData, setAlertsData] = useState<AlertItem[]>([]);
+  const [newAlert, setNewAlert] = useState<ApiAlertItem>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [geocodedAddresses, setGeocodedAddresses] = useState<
@@ -221,6 +222,16 @@ export function AlertsPage() {
     return () => window.clearTimeout(timeoutId);
   }, [toast]);
 
+  useEffect(() => {
+    if (newAlert == null) {
+      return;
+    }
+
+    alertsData.splice(0, 0, newAlert);
+    setAlertsData(alertsData);
+    setNewAlert(null);
+  }, [newAlert, alertsData]);
+
   const getAddress = (alert: AlertItem): string => {
     const key = `${alert.Latitude},${alert.Longitude}`;
     return geocodedAddresses[key] ?? `${alert.Latitude}, ${alert.Longitude}`;
@@ -406,8 +417,8 @@ export function AlertsPage() {
 
   const handleAlertMessage = (message: MessageEvent) => {
     const alert = alertAPI.stringToAlert(message.data);
-    alertsData.push(alert);
-    console.log("Received:", alert);
+    setSelectedAlert(null);
+    setNewAlert(alert);
   };
 
   if (isLoading) return <div className="flex-1 p-8">Loading alerts...</div>;
@@ -417,11 +428,6 @@ export function AlertsPage() {
   return (
     <div className="flex-1 min-h-full bg-[#E5E5E5] p-8">
       <div className="mb-6 flex items-center justify-between gap-4">
-        <WebSocketClient
-          url={`${API_BASE_URL}/alerts_broadcast`}
-          onMessage={handleAlertMessage}
-        />
-
         <ViewModeToggle value={viewMode} onChange={setViewMode} />
         <button
           type="button"
@@ -432,6 +438,11 @@ export function AlertsPage() {
           <FunnelIcon className="h-6 w-6" />
         </button>
       </div>
+
+      <WebSocketClient
+        url={`${API_BASE_URL}/alerts_broadcast`}
+        onMessage={handleAlertMessage}
+      />
 
       {viewMode === "card" ? (
         allCoordsGeocoded ? (

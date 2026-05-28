@@ -158,7 +158,6 @@ export function LocationsPage() {
 
     alertsData.splice(0, 0, newAlert);
     setAlertsData(alertsData);
-    console.log("alertsData:", alertsData);
     setNewAlert(null);
   }, [newAlert, alertsData]);
 
