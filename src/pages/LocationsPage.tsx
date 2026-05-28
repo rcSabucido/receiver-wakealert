@@ -77,7 +77,7 @@ export function LocationsPage() {
     };
   }, []);
 
-  useEffect(() => {
+  const fetchMissingVictimDetails = (forceFetch: boolean) => {
     if (alertsData.length === 0) return;
 
     const missingIds = Array.from(
@@ -103,7 +103,7 @@ export function LocationsPage() {
         })
       );
 
-      if (cancelled) return;
+      if (cancelled && !forceFetch) return;
 
       setVictimDetailsById((prev) => {
         const next = { ...prev };
@@ -118,6 +118,10 @@ export function LocationsPage() {
     return () => {
       cancelled = true;
     };
+  };
+
+  useEffect(() => {
+    return fetchMissingVictimDetails(false);
   }, [alertsData, victimDetailsById]);
 
   useEffect(() => {
@@ -159,7 +163,8 @@ export function LocationsPage() {
     alertsData.splice(0, 0, newAlert);
     setAlertsData(alertsData);
     setNewAlert(null);
-  }, [newAlert, alertsData]);
+    return fetchMissingVictimDetails(true);
+  }, [newAlert, alertsData, victimDetailsById]);
 
   const formatAlertDate = (value: string): string => {
     if (!value) return "";

@@ -109,7 +109,7 @@ export function AlertsPage() {
     fetchAlerts();
   }, []);
 
-  useEffect(() => {
+  const fetchMissingVictimDetails = (forceFetch: boolean) => {
     if (alertsData.length === 0) return;
 
     const missingIds = Array.from(
@@ -135,7 +135,7 @@ export function AlertsPage() {
         })
       );
 
-      if (cancelled) return;
+      if (cancelled && !forceFetch) return;
 
       setVictimDetailsById((prev) => {
         const next = { ...prev };
@@ -152,6 +152,10 @@ export function AlertsPage() {
     return () => {
       cancelled = true;
     };
+  }
+
+  useEffect(() => {
+    return fetchMissingVictimDetails();
   }, [alertsData, victimDetailsById]);
 
   useEffect(() => {
@@ -230,7 +234,9 @@ export function AlertsPage() {
     alertsData.splice(0, 0, newAlert);
     setAlertsData(alertsData);
     setNewAlert(null);
-  }, [newAlert, alertsData]);
+
+    return fetchMissingVictimDetails(true);
+  }, [newAlert, alertsData, victimDetailsById]);
 
   const getAddress = (alert: AlertItem): string => {
     const key = `${alert.Latitude},${alert.Longitude}`;
