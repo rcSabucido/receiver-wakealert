@@ -7,6 +7,7 @@ import { ArrowUpIcon } from "@heroicons/react/24/solid";
 import { ArrowDownIcon } from "@heroicons/react/24/solid";
 import { useNavigate } from "react-router-dom";
 import { MiniMap } from "../components/MiniMap";
+import WebSocketClient from "../lib/websocket";
 import { alertAPI, type AlertItem, type VictimDetails } from "../lib/api";
 
 type ViewMode = "card" | "list";
@@ -14,6 +15,8 @@ type StatusFilter = "all" | "ongoing" | "completed";
 type SortField = "id" | "victimId" | "alertTime" | "location" | "status";
 type SortDirection = "asc" | "desc";
 type ToastKind = "success" | "error";
+
+const API_BASE_URL = import.meta.env.VITE_API_URL;
 
 export function AlertsPage() {
   const CACHE_KEY = "geocoded_addresses"
@@ -122,7 +125,7 @@ export function AlertsPage() {
           try {
             const details = await alertAPI.getVictimDetails(id);
             if (details["address"] !== null && details["address"] !== undefined) {
-              details["address"] = details["address"].replaceAll("▞", ", ");
+              details["address"] = details["address"].replaceAll("▞", ", ").replaceAll(", , ", ", ");
             }
             return { id, details };
           } catch {
@@ -401,6 +404,11 @@ export function AlertsPage() {
       ? false
       : (alertStatuses[menuAlert.AlertID] ?? menuAlert.isCompleted);
 
+  const handleAlertMessage = (message: MessageEvent) => {
+    // TODO: handle incoming messages
+    console.log("Received:", message.data);
+  };
+
   if (isLoading) return <div className="flex-1 p-8">Loading alerts...</div>;
   if (error)
     return <div className="flex-1 p-8 text-red-800">Error: {error}</div>;
@@ -408,6 +416,11 @@ export function AlertsPage() {
   return (
     <div className="flex-1 min-h-full bg-[#E5E5E5] p-8">
       <div className="mb-6 flex items-center justify-between gap-4">
+        <WebSocketClient
+          url={`${API_BASE_URL}/alerts_broadcast`}
+          onMessage={handleAlertMessage}
+        />
+
         <ViewModeToggle value={viewMode} onChange={setViewMode} />
         <button
           type="button"

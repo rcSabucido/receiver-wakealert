@@ -19,6 +19,8 @@ type ViewAlert = {
   isCompleted: boolean;
 };
 
+const API_BASE_URL = import.meta.env.VITE_API_URL;
+
 type ToastKind = "success" | "error";
 
 export function LocationsPage() {
@@ -232,16 +234,23 @@ export function LocationsPage() {
     setIsModalOpen(true);
   };
 
+  const handleAlertMessage = (message: MessageEvent) => {
+    // TODO: handle incoming messages
+    console.log("Received:", message.data);
+  };
+
   return (
     <div className="flex h-full w-full bg-[#E5E7EB] overflow-hidden font-sans">
-
-     
       <div
         className={`relative flex flex-col bg-[#F3F4F6] border-r border-gray-300 transition-all 
                     duration-300 ${isCardCollapsed ? "w-0 overflow-hidden" : "w-[300px]"
         }`}
       >
-       
+        <WebSocketClient
+          url={`${API_BASE_URL}/alerts_broadcast`}
+          onMessage={handleAlertMessage}
+        />
+
         <div className="p-2">
           <div className="flex bg-[#3F8EFC] p-1 rounded-lg border border-blue-600">
             <button
