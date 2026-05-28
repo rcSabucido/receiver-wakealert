@@ -100,6 +100,19 @@ class AlertAPI {
     }));
   }
 
+  public stringToAlert(alertString: string): AlertItem {
+    const alert = JSON.parse(alertString) as Record<string, unknown>;
+    return {
+      AlertID: alert.AlertID as number,
+      Latitude: alert.Latitude as string,
+      Longitude: alert.Longitude as string,
+      AlertTime: alert.AlertTime as string,
+      VictimID: alert.VictimID as number,
+      isCompleted: (alert.isCompleted ?? alert.IsCompleted) as boolean,
+      isDeleted: (alert.isDeleted ?? alert.IsDeleted) as boolean,
+    }
+  }
+
   async getAlert(id: number): Promise<AlertItem> {
     const response = await fetch(`${this.baseUrl}/alerts/${id}`, {
       headers: this.getHeaders(),

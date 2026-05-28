@@ -7,6 +7,7 @@ import { ArrowUpIcon } from "@heroicons/react/24/solid";
 import { ArrowDownIcon } from "@heroicons/react/24/solid";
 import { useNavigate } from "react-router-dom";
 import { MiniMap } from "../components/MiniMap";
+import WebSocketClient from "../lib/websocket";
 import { alertAPI, type AlertItem, type VictimDetails } from "../lib/api";
 
 type ViewMode = "card" | "list";
@@ -15,9 +16,12 @@ type SortField = "id" | "victimId" | "alertTime" | "location" | "status";
 type SortDirection = "asc" | "desc";
 type ToastKind = "success" | "error";
 
+const API_BASE_URL = import.meta.env.VITE_API_URL;
+
 export function AlertsPage() {
   const CACHE_KEY = "geocoded_addresses"
   const [alertsData, setAlertsData] = useState<AlertItem[]>([]);
+  const [newAlert, setNewAlert] = useState<AlertItem | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [geocodedAddresses, setGeocodedAddresses] = useState<
@@ -105,7 +109,7 @@ export function AlertsPage() {
     fetchAlerts();
   }, []);
 
-  useEffect(() => {
+  const fetchMissingVictimDetails = (forceFetch: boolean) => {
     if (alertsData.length === 0) return;
 
     const missingIds = Array.from(
@@ -122,7 +126,7 @@ export function AlertsPage() {
           try {
             const details = await alertAPI.getVictimDetails(id);
             if (details["address"] !== null && details["address"] !== undefined) {
-              details["address"] = details["address"].replaceAll("▞", ", ");
+              details["address"] = details["address"].replaceAll("▞", ", ").replaceAll(", , ", ", ");
             }
             return { id, details };
           } catch {
@@ -131,7 +135,7 @@ export function AlertsPage() {
         })
       );
 
-      if (cancelled) return;
+      if (cancelled && !forceFetch) return;
 
       setVictimDetailsById((prev) => {
         const next = { ...prev };
@@ -148,6 +152,10 @@ export function AlertsPage() {
     return () => {
       cancelled = true;
     };
+  }
+
+  useEffect(() => {
+    return fetchMissingVictimDetails(false);
   }, [alertsData, victimDetailsById]);
 
   useEffect(() => {
@@ -217,6 +225,18 @@ export function AlertsPage() {
     const timeoutId = window.setTimeout(() => setToast(null), 3000);
     return () => window.clearTimeout(timeoutId);
   }, [toast]);
+
+  useEffect(() => {
+    if (newAlert == null) {
+      return;
+    }
+
+    alertsData.splice(0, 0, newAlert);
+    setAlertsData(alertsData);
+    setNewAlert(null);
+
+    return fetchMissingVictimDetails(true);
+  }, [newAlert, alertsData, victimDetailsById]);
 
   const getAddress = (alert: AlertItem): string => {
     const key = `${alert.Latitude},${alert.Longitude}`;
@@ -401,6 +421,12 @@ export function AlertsPage() {
       ? false
       : (alertStatuses[menuAlert.AlertID] ?? menuAlert.isCompleted);
 
+  const handleAlertMessage = (message: MessageEvent) => {
+    const alert = alertAPI.stringToAlert(message.data);
+    setSelectedAlert(null);
+    setNewAlert(alert);
+  };
+
   if (isLoading) return <div className="flex-1 p-8">Loading alerts...</div>;
   if (error)
     return <div className="flex-1 p-8 text-red-800">Error: {error}</div>;
@@ -418,6 +444,11 @@ export function AlertsPage() {
           <FunnelIcon className="h-6 w-6" />
         </button>
       </div>
+
+      <WebSocketClient
+        url={`${API_BASE_URL}/alerts_broadcast`}
+        onMessage={handleAlertMessage}
+      />
 
       {viewMode === "card" ? (
         allCoordsGeocoded ? (

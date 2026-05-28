@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import { useLocation } from "react-router-dom";
 import { ChevronLeftIcon, ChevronRightIcon } from "@heroicons/react/24/outline";
 import InformationModal from "../components/InformationModal";
+import WebSocketClient from "../lib/websocket";
 import { MapView } from "../components/MapView";
 import {
   alertAPI,
@@ -19,12 +20,15 @@ type ViewAlert = {
   isCompleted: boolean;
 };
 
+const API_BASE_URL = import.meta.env.VITE_API_URL;
+
 type ToastKind = "success" | "error";
 
 export function LocationsPage() {
   const location = useLocation();
   const userData = location.state?.userData;
   const [alertsData, setAlertsData] = useState<ApiAlertItem[]>([]);
+  const [newAlert, setNewAlert] = useState<ApiAlertItem | null>(null);
   const [victimDetailsById, setVictimDetailsById] = useState<
     Record<number, VictimDetails>
   >({});
@@ -73,7 +77,7 @@ export function LocationsPage() {
     };
   }, []);
 
-  useEffect(() => {
+  const fetchMissingVictimDetails = (forceFetch: boolean) => {
     if (alertsData.length === 0) return;
 
     const missingIds = Array.from(
@@ -99,7 +103,7 @@ export function LocationsPage() {
         })
       );
 
-      if (cancelled) return;
+      if (cancelled && !forceFetch) return;
 
       setVictimDetailsById((prev) => {
         const next = { ...prev };
@@ -114,6 +118,10 @@ export function LocationsPage() {
     return () => {
       cancelled = true;
     };
+  };
+
+  useEffect(() => {
+    return fetchMissingVictimDetails(false);
   }, [alertsData, victimDetailsById]);
 
   useEffect(() => {
@@ -146,6 +154,17 @@ export function LocationsPage() {
     const timeoutId = window.setTimeout(() => setToast(null), 3000);
     return () => window.clearTimeout(timeoutId);
   }, [toast]);
+
+  useEffect(() => {
+    if (newAlert == null) {
+      return;
+    }
+
+    alertsData.splice(0, 0, newAlert);
+    setAlertsData(alertsData);
+    setNewAlert(null);
+    return fetchMissingVictimDetails(true);
+  }, [newAlert, alertsData, victimDetailsById]);
 
   const formatAlertDate = (value: string): string => {
     if (!value) return "";
@@ -232,16 +251,24 @@ export function LocationsPage() {
     setIsModalOpen(true);
   };
 
+  const handleAlertMessage = (message: MessageEvent) => {
+    const alert = alertAPI.stringToAlert(message.data);
+    setSelectedAlertId(null);
+    setNewAlert(alert);
+  };
+
   return (
     <div className="flex h-full w-full bg-[#E5E7EB] overflow-hidden font-sans">
-
-     
       <div
         className={`relative flex flex-col bg-[#F3F4F6] border-r border-gray-300 transition-all 
                     duration-300 ${isCardCollapsed ? "w-0 overflow-hidden" : "w-[300px]"
         }`}
       >
-       
+        <WebSocketClient
+          url={`${API_BASE_URL}/alerts_broadcast`}
+          onMessage={handleAlertMessage}
+        />
+
         <div className="p-2">
           <div className="flex bg-[#3F8EFC] p-1 rounded-lg border border-blue-600">
             <button
