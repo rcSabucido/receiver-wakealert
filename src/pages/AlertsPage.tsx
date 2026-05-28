@@ -405,8 +405,9 @@ export function AlertsPage() {
       : (alertStatuses[menuAlert.AlertID] ?? menuAlert.isCompleted);
 
   const handleAlertMessage = (message: MessageEvent) => {
-    // TODO: handle incoming messages
-    console.log("Received:", message.data);
+    const alert = alertAPI.stringToAlert(message.data);
+    alertsData.push(alert);
+    console.log("Received:", alert);
   };
 
   if (isLoading) return <div className="flex-1 p-8">Loading alerts...</div>;

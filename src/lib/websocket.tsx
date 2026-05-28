@@ -36,8 +36,12 @@ export default function WebSocketClient({ url, onMessage }: WebSocketClientProps
 
   return (
     <div>
+    {/*
+    <div>
       <p>WebSocket status: {connectionStatus}</p>
       <p>Last message: {lastMessage?.data ?? "None"}</p>
+    </div>
+    */}
     </div>
   );
 }

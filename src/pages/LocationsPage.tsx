@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import { useLocation } from "react-router-dom";
 import { ChevronLeftIcon, ChevronRightIcon } from "@heroicons/react/24/outline";
 import InformationModal from "../components/InformationModal";
+import WebSocketClient from "../lib/websocket";
 import { MapView } from "../components/MapView";
 import {
   alertAPI,
@@ -27,6 +28,7 @@ export function LocationsPage() {
   const location = useLocation();
   const userData = location.state?.userData;
   const [alertsData, setAlertsData] = useState<ApiAlertItem[]>([]);
+  const [newAlert, setNewAlert] = useState<ApiAlertItem>(null);
   const [victimDetailsById, setVictimDetailsById] = useState<
     Record<number, VictimDetails>
   >({});
@@ -149,6 +151,17 @@ export function LocationsPage() {
     return () => window.clearTimeout(timeoutId);
   }, [toast]);
 
+  useEffect(() => {
+    if (newAlert == null) {
+      return;
+    }
+
+    alertsData.splice(0, 0, newAlert);
+    setAlertsData(alertsData);
+    console.log("alertsData:", alertsData);
+    setNewAlert(null);
+  }, [newAlert, alertsData]);
+
   const formatAlertDate = (value: string): string => {
     if (!value) return "";
     const normalized = value.includes("T") ? value : value.replace(" ", "T");
@@ -235,8 +248,9 @@ export function LocationsPage() {
   };
 
   const handleAlertMessage = (message: MessageEvent) => {
-    // TODO: handle incoming messages
-    console.log("Received:", message.data);
+    const alert = alertAPI.stringToAlert(message.data);
+    setSelectedAlertId(null);
+    setNewAlert(alert);
   };
 
   return (
