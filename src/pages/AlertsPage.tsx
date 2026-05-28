@@ -155,7 +155,7 @@ export function AlertsPage() {
   }
 
   useEffect(() => {
-    return fetchMissingVictimDetails();
+    return fetchMissingVictimDetails(false);
   }, [alertsData, victimDetailsById]);
 
   useEffect(() => {
